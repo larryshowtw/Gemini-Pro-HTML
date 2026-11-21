@@ -1,0 +1,2668 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>終極小畫家 Pro - 該有的與沒有的都在這</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans TC"', 'Inter', 'sans-serif'],
+            pixel: ['"Press Start 2P"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; user-select: none; }
+    body { margin: 0; overflow: hidden; font-family: 'Noto Sans TC', 'Inter', sans-serif; }
+
+    /* 自訂捲軸 */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.4); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(156, 163, 175, 0.7); }
+
+    /* 透明棋盤格背景 */
+    .checkerboard {
+      background-color: #ffffff;
+      background-image:
+        linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
+        linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
+        linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    }
+
+    /* Windows 95 懷舊經典主題覆寫 */
+    body.win95-theme {
+      font-family: 'MS Sans Serif', 'Noto Sans TC', sans-serif !important;
+      background-color: #008080 !important;
+      color: #000000 !important;
+    }
+    body.win95-theme .ui-panel {
+      background-color: #c0c0c0 !important;
+      color: #000000 !important;
+      border: 2px solid !important;
+      border-color: #ffffff #808080 #808080 #ffffff !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+    body.win95-theme .ui-btn {
+      background-color: #c0c0c0 !important;
+      color: #000000 !important;
+      border: 2px solid !important;
+      border-color: #ffffff #808080 #808080 #ffffff !important;
+      border-radius: 0 !important;
+    }
+    body.win95-theme .ui-btn:active,
+    body.win95-theme .ui-btn.active-tool {
+      border-color: #808080 #ffffff #ffffff #808080 !important;
+      background-color: #dfdfdf !important;
+    }
+    body.win95-theme .workspace-bg {
+      background-color: #808080 !important;
+      background-image: none !important;
+    }
+    body.win95-theme .win95-titlebar {
+      display: flex !important;
+      background: linear-gradient(90deg, #000080, #1084d0);
+      color: white;
+    }
+
+    /* 選取虛線動畫 */
+    @keyframes marchingAnts {
+      0% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: 16; }
+    }
+    .marching-ants {
+      animation: marchingAnts 0.6s linear infinite;
+    }
+
+    /* Range input 樣式 */
+    input[type="range"] {
+      accent-color: #6366f1;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen w-screen flex flex-col overflow-hidden transition-colors duration-200">
+
+  <!-- Windows 95 經典標題列 (僅在懷舊模式顯示) -->
+  <div class="win95-titlebar hidden items-center justify-between px-2 py-1 text-xs font-bold select-none">
+    <div class="flex items-center gap-1.5">
+      <i class="fa-solid fa-palette text-yellow-300"></i>
+      <span>未命名 - 終極小畫家 95 Pro</span>
+    </div>
+    <div class="flex gap-1">
+      <button onclick="toggleWin95Theme()" class="bg-[#c0c0c0] text-black px-1.5 border border-white border-r-gray-700 border-b-gray-700 font-bold">_</button>
+      <button onclick="toggleWin95Theme()" class="bg-[#c0c0c0] text-black px-1.5 border border-white border-r-gray-700 border-b-gray-700 font-bold">□</button>
+      <button onclick="toggleWin95Theme()" class="bg-[#c0c0c0] text-black px-1.5 border border-white border-r-gray-700 border-b-gray-700 font-bold" title="回到現代主題">✕</button>
+    </div>
+  </div>
+
+  <!-- 頂部功能選單列 -->
+  <header class="ui-panel h-12 bg-slate-900 border-b border-slate-800 px-3 flex items-center justify-between gap-2 shrink-0 z-30">
+    <!-- 左側 Logo 與檔案操作 -->
+    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+      <div class="flex items-center gap-2 pr-2 border-r border-slate-700/70 shrink-0">
+        <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+          <i class="fa-solid fa-wand-magic-sparkles text-white text-xs"></i>
+        </div>
+        <span class="font-bold text-sm tracking-wide hidden sm:inline bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text text-transparent">終極小畫家 Pro</span>
+      </div>
+
+      <!-- 檔案按鈕群 -->
+      <button onclick="openNewCanvasModal()" class="ui-btn px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs flex items-center gap-1.5 shrink-0" title="開新畫布 (Ctrl+N)">
+        <i class="fa-regular fa-file text-indigo-400"></i><span class="hidden md:inline">開新檔案</span>
+      </button>
+
+      <label class="ui-btn px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs flex items-center gap-1.5 cursor-pointer shrink-0" title="匯入圖片或專案檔 (.json)">
+        <i class="fa-regular fa-folder-open text-amber-400"></i><span class="hidden md:inline">匯入</span>
+        <input type="file" id="importInput" accept="image/*,.json" class="hidden" onchange="handleImport(event)">
+      </label>
+
+      <div class="relative shrink-0">
+        <button onclick="toggleExportMenu()" class="ui-btn px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center gap-1.5" title="匯出作品">
+          <i class="fa-solid fa-download"></i><span>匯出</span><i class="fa-solid fa-caret-down text-[10px]"></i>
+        </button>
+        <!-- 匯出下拉選單 -->
+        <div id="exportMenu" class="ui-panel hidden fixed mt-1 w-48 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl py-1.5 z-50 text-xs">
+          <button onclick="exportImage('png')" class="w-full text-left px-3 py-2 hover:bg-slate-700 flex items-center justify-between">
+            <span><i class="fa-regular fa-image mr-2 text-emerald-400"></i>PNG 無損透明圖</span><span class="text-[10px] opacity-60">推薦</span>
+          </button>
+          <button onclick="exportImage('jpeg')" class="w-full text-left px-3 py-2 hover:bg-slate-700 flex items-center justify-between">
+            <span><i class="fa-regular fa-file-image mr-2 text-sky-400"></i>JPEG 壓縮圖檔</span>
+          </button>
+          <button onclick="exportImage('webp')" class="w-full text-left px-3 py-2 hover:bg-slate-700 flex items-center justify-between">
+            <span><i class="fa-solid fa-bolt mr-2 text-amber-400"></i>WEBP 高效網頁圖</span>
+          </button>
+          <div class="border-t border-slate-700 my-1"></div>
+          <button onclick="exportSpriteSheet()" class="w-full text-left px-3 py-2 hover:bg-slate-700 flex items-center justify-between">
+            <span><i class="fa-solid fa-film mr-2 text-purple-400"></i>動畫精靈圖 (Sprite)</span>
+          </button>
+          <button onclick="exportProjectJSON()" class="w-full text-left px-3 py-2 hover:bg-slate-700 flex items-center justify-between">
+            <span><i class="fa-solid fa-layer-group mr-2 text-pink-400"></i>儲存多圖層專案 (.json)</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="h-5 w-[1px] bg-slate-700/70 mx-0.5 shrink-0"></div>
+
+      <!-- 復原/重做 -->
+      <button onclick="undo()" id="btnUndo" class="ui-btn p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-xs shrink-0" title="復原 (Ctrl+Z)">
+        <i class="fa-solid fa-rotate-left"></i>
+      </button>
+      <button onclick="redo()" id="btnRedo" class="ui-btn p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-xs shrink-0" title="重做 (Ctrl+Y)">
+        <i class="fa-solid fa-rotate-right"></i>
+      </button>
+      <button onclick="clearActiveLayer()" class="ui-btn px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/60 text-rose-400 text-xs shrink-0" title="清空目前圖層">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+    </div>
+
+    <!-- 中間：超狂功能快速開關 (對稱、縮時、物理流沙、動畫) -->
+    <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+      <!-- 對稱萬花筒控制 -->
+      <div class="flex items-center bg-slate-800/90 border border-slate-700/80 rounded-lg px-2 py-1 gap-1.5 shrink-0" title="萬花筒與鏡像對稱繪圖">
+        <i class="fa-solid fa-snowflake text-cyan-400 text-xs"></i>
+        <select id="symmetrySelect" onchange="setSymmetryMode(this.value)" class="bg-transparent text-xs focus:outline-none cursor-pointer">
+          <option value="none" class="bg-slate-800">無對稱</option>
+          <option value="vertical" class="bg-slate-800">左右鏡像</option>
+          <option value="horizontal" class="bg-slate-800">上下鏡像</option>
+          <option value="quad" class="bg-slate-800">四象限鏡像</option>
+          <option value="kaleido6" class="bg-slate-800">6 瓣萬花筒</option>
+          <option value="kaleido8" class="bg-slate-800">8 瓣萬花筒</option>
+          <option value="kaleido12" class="bg-slate-800">12 瓣萬花筒</option>
+        </select>
+      </div>
+
+      <!-- 重力流沙模式 -->
+      <button id="btnSandbox" onclick="toggleSandboxMode()" class="ui-btn px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs flex items-center gap-1.5 shrink-0 border border-transparent" title="物理重力流沙模式：畫出來的顏料會像沙子一樣往下掉落堆積！">
+        <i class="fa-solid fa-hourglass-half text-amber-400"></i><span class="hidden lg:inline">重力流沙</span>
+      </button>
+
+      <!-- 縮時攝影回放 -->
+      <button onclick="openTimelapseModal()" class="ui-btn px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs flex items-center gap-1.5 shrink-0" title="繪畫縮時攝影回放">
+        <i class="fa-solid fa-clapperboard text-pink-400"></i><span class="hidden lg:inline">縮時回放</span>
+      </button>
+
+      <!-- 逐格動畫預覽 -->
+      <button onclick="openAnimationModal()" class="ui-btn px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs flex items-center gap-1.5 shrink-0" title="將所有圖層變成逐格動畫播放！">
+        <i class="fa-solid fa-play text-emerald-400"></i><span class="hidden lg:inline">逐格動畫</span>
+      </button>
+    </div>
+
+    <!-- 右側：檢視設定與主題切換 -->
+    <div class="flex items-center gap-1.5 shrink-0">
+      <button onclick="toggleGrid()" id="btnGrid" class="ui-btn p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs" title="顯示/隱藏輔助網格">
+        <i class="fa-solid fa-border-all"></i>
+      </button>
+      <button onclick="toggleWin95Theme()" id="btnWin95" class="ui-btn px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs flex items-center gap-1" title="彩蛋：一鍵切換經典 Windows 95 懷舊小畫家介面！">
+        <i class="fa-brands fa-windows text-sky-400"></i><span class="hidden xl:inline">Win95</span>
+      </button>
+      <button onclick="toggleDarkMode()" class="ui-btn p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs" title="切換深色/淺色外觀">
+        <i id="themeIcon" class="fa-solid fa-sun text-amber-300"></i>
+      </button>
+      <button onclick="toggleRightSidebar()" class="ui-btn p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs lg:hidden" title="展開/收合右側面板">
+        <i class="fa-solid fa-sliders"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- 工具屬性列 (動態顯示目前工具的細部設定) -->
+  <div id="toolOptionsBar" class="ui-panel min-h-[42px] bg-slate-900/95 border-b border-slate-800 px-3 py-1.5 flex flex-wrap items-center gap-3 text-xs z-20 shrink-0">
+    <!-- 筆刷大小 -->
+    <div class="flex items-center gap-2">
+      <span class="opacity-75">粗細:</span>
+      <input type="range" id="brushSize" min="1" max="120" value="8" oninput="updateBrushSize(this.value)" class="w-24 sm:w-28 cursor-pointer">
+      <span id="brushSizeVal" class="w-8 font-mono text-right text-indigo-400 font-bold">8px</span>
+    </div>
+
+    <!-- 不透明度 -->
+    <div class="flex items-center gap-2">
+      <span class="opacity-75">不透明度:</span>
+      <input type="range" id="brushOpacity" min="1" max="100" value="100" oninput="updateBrushOpacity(this.value)" class="w-20 sm:w-24 cursor-pointer">
+      <span id="brushOpacityVal" class="w-9 font-mono text-right text-indigo-400 font-bold">100%</span>
+    </div>
+
+    <!-- 動態上下文選項容器 -->
+    <div id="dynamicToolOptions" class="flex flex-wrap items-center gap-3 border-l border-slate-700/70 pl-3">
+      <!-- 由 JS 依據選擇的工具動態填入 -->
+    </div>
+
+    <!-- 選取區變形快捷操作 (僅在有選取框時顯示) -->
+    <div id="selectionActions" class="hidden items-center gap-1.5 border-l border-amber-500/40 pl-3 ml-auto">
+      <span class="text-amber-400 font-medium"><i class="fa-solid fa-vector-square mr-1"></i>選取操作:</span>
+      <button onclick="transformSelection('flipH')" class="ui-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="水平翻轉選區"><i class="fa-solid fa-left-right"></i></button>
+      <button onclick="transformSelection('flipV')" class="ui-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="垂直翻轉選區"><i class="fa-solid fa-up-down"></i></button>
+      <button onclick="transformSelection('rotate90')" class="ui-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="順時針旋轉 90°"><i class="fa-solid fa-rotate-right"></i></button>
+      <button onclick="cropToSelection()" class="ui-btn px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white" title="裁切畫布至選取範圍"><i class="fa-solid fa-crop-simple mr-1"></i>裁切</button>
+      <button onclick="commitSelection()" class="ui-btn px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white" title="固定選取內容 (Enter)">確定</button>
+      <button onclick="clearSelection()" class="ui-btn px-2 py-1 rounded bg-slate-700 hover:bg-slate-600" title="取消選取 (Esc)">取消</button>
+    </div>
+  </div>
+
+  <!-- 主工作區 -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- 左側工具列 -->
+    <aside class="ui-panel w-14 sm:w-16 bg-slate-900 border-r border-slate-800 flex flex-col items-center py-2 gap-1.5 overflow-y-auto shrink-0 z-20">
+      <!-- 基礎繪圖 -->
+      <div class="text-[10px] opacity-50 font-bold tracking-wider mt-0.5">繪畫</div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 px-1 w-full">
+        <button data-tool="pencil" onclick="selectTool('pencil')" class="tool-btn ui-btn active-tool p-2 rounded-lg bg-indigo-600 text-white flex items-center justify-center" title="鉛筆 (P) - 銳利像素線條">
+          <i class="fa-solid fa-pencil"></i>
+        </button>
+        <button data-tool="brush" onclick="selectTool('brush')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="柔順畫筆 (B) - 抗鋸齒平滑筆觸">
+          <i class="fa-solid fa-paintbrush"></i>
+        </button>
+        <button data-tool="calligraphy" onclick="selectTool('calligraphy')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="書法鋼筆 - 隨角度變化的扁平筆鋒">
+          <i class="fa-solid fa-pen-nib"></i>
+        </button>
+        <button data-tool="airbrush" onclick="selectTool('airbrush')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="噴漆罐 - 粒子噴霧效果">
+          <i class="fa-solid fa-spray-can"></i>
+        </button>
+        <button data-tool="watercolor" onclick="selectTool('watercolor')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="水彩筆刷 - 半透明暈染疊加">
+          <i class="fa-solid fa-droplet"></i>
+        </button>
+        <button data-tool="eraser" onclick="selectTool('eraser')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="橡皮擦 (E)">
+          <i class="fa-solid fa-eraser"></i>
+        </button>
+      </div>
+
+      <!-- 魔法創意筆刷 (MS Paint 沒有的超狂功能) -->
+      <div class="text-[10px] text-pink-400 font-bold tracking-wider mt-1">魔法</div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 px-1 w-full">
+        <button data-tool="neon" onclick="selectTool('neon')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-pink-400 flex items-center justify-center" title="彩虹霓虹發光筆刷 - 自動變換色相與外發光">
+          <i class="fa-solid fa-wand-sparkles"></i>
+        </button>
+        <button data-tool="web" onclick="selectTool('web')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 flex items-center justify-center" title="蜘蛛網/毛皮素描筆刷 - 自動連接鄰近軌跡">
+          <i class="fa-solid fa-spider"></i>
+        </button>
+        <button data-tool="pixel" onclick="selectTool('pixel')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 flex items-center justify-center" title="8-Bit 像素藝術筆刷 - 自動對齊像素網格">
+          <i class="fa-solid fa-gamepad"></i>
+        </button>
+        <button data-tool="emoji" onclick="selectTool('emoji')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 flex items-center justify-center" title="Emoji 表情符號噴槍 - 噴灑可愛貼圖">
+          <i class="fa-regular fa-face-laugh-beam"></i>
+        </button>
+      </div>
+
+      <!-- 填色、選取與文字 -->
+      <div class="text-[10px] opacity-50 font-bold tracking-wider mt-1">工具</div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 px-1 w-full">
+        <button data-tool="bucket" onclick="selectTool('bucket')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="油漆桶填滿 (G) - 支援容許度">
+          <i class="fa-solid fa-fill-drip"></i>
+        </button>
+        <button data-tool="gradient" onclick="selectTool('gradient')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="漸層填充工具 - 拖曳拉出線性或放射漸層">
+          <i class="fa-solid fa-circle-half-stroke"></i>
+        </button>
+        <button data-tool="eyedropper" onclick="selectTool('eyedropper')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="滴管吸色器 (I)">
+          <i class="fa-solid fa-eye-dropper"></i>
+        </button>
+        <button data-tool="text" onclick="selectTool('text')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="文字工具 (T)">
+          <i class="fa-solid fa-font"></i>
+        </button>
+        <button data-tool="select" onclick="selectTool('select')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="矩形選取與移動變形 (M)">
+          <i class="fa-solid fa-vector-square"></i>
+        </button>
+        <button data-tool="wand" onclick="selectTool('wand')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="魔術棒選取 (W) - 點擊選取相近顏色區域">
+          <i class="fa-solid fa-wand-magic"></i>
+        </button>
+      </div>
+
+      <!-- 幾何形狀 -->
+      <div class="text-[10px] opacity-50 font-bold tracking-wider mt-1">形狀</div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 px-1 w-full">
+        <button data-tool="line" onclick="selectTool('line')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="直線 (按住 Shift 鎖定 45°)">
+          <i class="fa-solid fa-slash"></i>
+        </button>
+        <button data-tool="rect" onclick="selectTool('rect')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="矩形 (按住 Shift 畫正方形)">
+          <i class="fa-regular fa-square"></i>
+        </button>
+        <button data-tool="roundrect" onclick="selectTool('roundrect')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="圓角矩形">
+          <i class="fa-solid fa-square"></i>
+        </button>
+        <button data-tool="circle" onclick="selectTool('circle')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="橢圓 / 正圓">
+          <i class="fa-regular fa-circle"></i>
+        </button>
+        <button data-tool="star" onclick="selectTool('star')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="五角星形">
+          <i class="fa-regular fa-star"></i>
+        </button>
+        <button data-tool="arrow" onclick="selectTool('arrow')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="箭頭指示">
+          <i class="fa-solid fa-arrow-right-long"></i>
+        </button>
+        <button data-tool="bubble" onclick="selectTool('bubble')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="漫畫對話框">
+          <i class="fa-regular fa-comment"></i>
+        </button>
+        <button data-tool="heart" onclick="selectTool('heart')" class="tool-btn ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center" title="愛心形狀">
+          <i class="fa-regular fa-heart"></i>
+        </button>
+      </div>
+
+      <!-- 底部前景色/背景色快速檢視 -->
+      <div class="mt-auto pt-3 pb-1 flex flex-col items-center gap-1.5">
+        <div class="relative w-10 h-10">
+          <!-- 背景色 (次要色) -->
+          <div id="secondaryColorBox" onclick="swapColors()" class="w-6 h-6 rounded border-2 border-slate-400 absolute bottom-0 right-0 cursor-pointer shadow" style="background-color: #ffffff;" title="背景色 (點擊互換 X)"></div>
+          <!-- 前景色 (主要色) -->
+          <div id="primaryColorBox" onclick="document.getElementById('nativeColorPicker').click()" class="w-7 h-7 rounded border-2 border-white absolute top-0 left-0 cursor-pointer shadow-md" style="background-color: #6366f1;" title="前景色 (點擊開啟調色盤)"></div>
+        </div>
+        <button onclick="swapColors()" class="text-[10px] opacity-70 hover:opacity-100" title="互換前景/背景色 (X)">
+          <i class="fa-solid fa-arrows-rotate"></i> 互換
+        </button>
+      </div>
+    </aside>
+
+    <!-- 中央畫布工作區域 -->
+    <main id="canvasViewport" class="workspace-bg flex-1 bg-slate-950 relative overflow-hidden flex items-center justify-center cursor-crosshair">
+      <!-- 畫布容器 (支援縮放與平移) -->
+      <div id="canvasContainer" class="relative shadow-2xl checkerboard origin-center transition-transform duration-75" style="width: 900px; height: 600px;">
+        <!-- 合成主畫布 -->
+        <canvas id="mainCanvas" width="900" height="600" class="absolute inset-0 pointer-events-none"></canvas>
+        <!-- 重力流沙模擬畫布 -->
+        <canvas id="sandCanvas" width="900" height="600" class="absolute inset-0 pointer-events-none hidden"></canvas>
+        <!-- 互動預覽畫布 (形狀拖曳、筆刷游標、對稱輔助線、選取框) -->
+        <canvas id="overlayCanvas" width="900" height="600" class="absolute inset-0"></canvas>
+        <!-- 輔助網格疊加層 -->
+        <div id="gridOverlay" class="absolute inset-0 pointer-events-none hidden" style="background-image: linear-gradient(to right, rgba(99,102,241,0.25) 1px, transparent 1px), linear-gradient(to bottom, rgba(99,102,241,0.25) 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+        <!-- 畫布內嵌文字輸入框 -->
+        <div id="textInputOverlay" class="hidden absolute z-30">
+          <textarea id="canvasTextArea" rows="2" placeholder="輸入文字..." class="bg-slate-900/80 text-white border-2 border-dashed border-indigo-400 rounded p-1.5 outline-none resize min-w-[140px] shadow-xl"></textarea>
+          <div class="flex gap-1 mt-1">
+            <button onclick="commitText()" class="px-2 py-0.5 bg-indigo-600 text-white text-xs rounded shadow">確定</button>
+            <button onclick="cancelText()" class="px-2 py-0.5 bg-slate-700 text-white text-xs rounded shadow">取消</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 浮動右下角縮放與座標狀態列 -->
+      <div class="ui-panel absolute bottom-3 left-3 right-3 sm:left-auto sm:right-4 bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl px-3 py-1.5 flex items-center justify-between sm:justify-end gap-3 text-xs shadow-lg z-20">
+        <div class="flex items-center gap-2 font-mono opacity-80">
+          <span id="cursorPos">X: 0, Y: 0</span>
+          <span class="opacity-40">|</span>
+          <span id="canvasDimText">900 × 600</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button onclick="adjustZoom(-0.15)" class="ui-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700" title="縮小 (-)">-</button>
+          <span id="zoomLevelText" class="w-11 text-center font-mono">100%</span>
+          <button onclick="adjustZoom(0.15)" class="ui-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700" title="放大 (+)">+</button>
+          <button onclick="resetZoom()" class="ui-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700" title="適合螢幕大小">重置</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- 右側面板 (色彩、圖層、濾鏡特效、歷史紀錄) -->
+    <aside id="rightSidebar" class="ui-panel w-72 bg-slate-900 border-l border-slate-800 flex flex-col shrink-0 z-20 transition-all duration-200 absolute lg:static right-0 top-0 bottom-0 translate-x-full lg:translate-x-0">
+      <!-- 分頁切換標籤 -->
+      <div class="grid grid-cols-4 border-b border-slate-800 text-xs font-medium">
+        <button onclick="switchRightTab('color')" id="tab-color" class="right-tab py-2.5 text-indigo-400 border-b-2 border-indigo-500 flex flex-col items-center gap-0.5">
+          <i class="fa-solid fa-palette"></i><span>色彩</span>
+        </button>
+        <button onclick="switchRightTab('layers')" id="tab-layers" class="right-tab py-2.5 opacity-60 hover:opacity-100 flex flex-col items-center gap-0.5">
+          <i class="fa-solid fa-layer-group"></i><span>圖層</span>
+        </button>
+        <button onclick="switchRightTab('fx')" id="tab-fx" class="right-tab py-2.5 opacity-60 hover:opacity-100 flex flex-col items-center gap-0.5">
+          <i class="fa-solid fa-wand-magic-sparkles"></i><span>濾鏡FX</span>
+        </button>
+        <button onclick="switchRightTab('history')" id="tab-history" class="right-tab py-2.5 opacity-60 hover:opacity-100 flex flex-col items-center gap-0.5">
+          <i class="fa-solid fa-clock-rotate-left"></i><span>歷史</span>
+        </button>
+      </div>
+
+      <!-- 1. 色彩面板 -->
+      <div id="panel-color" class="right-panel p-3 flex-1 overflow-y-auto flex flex-col gap-3">
+        <!-- 系統原生色盤與 HEX 輸入 -->
+        <div class="flex items-center gap-2">
+          <input type="color" id="nativeColorPicker" value="#6366f1" oninput="setPrimaryColor(this.value)" class="w-10 h-10 rounded cursor-pointer bg-transparent border-0">
+          <div class="flex-1">
+            <label class="text-[10px] opacity-60 block">HEX 色碼</label>
+            <input type="text" id="hexColorInput" value="#6366F1" onchange="setPrimaryColor(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs font-mono uppercase">
+          </div>
+          <button onclick="randomVibrantColor()" class="ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400" title="隨機靈感配色">
+            <i class="fa-solid fa-dice"></i>
+          </button>
+        </div>
+
+        <!-- HSL 滑桿微調 -->
+        <div class="bg-slate-800/50 rounded-xl p-2.5 space-y-2 text-xs">
+          <div>
+            <div class="flex justify-between text-[11px] opacity-80 mb-0.5"><span>色相 (H)</span><span id="hslHVal">239°</span></div>
+            <input type="range" id="hslH" min="0" max="360" value="239" oninput="updateFromHSL()" class="w-full h-2 rounded-lg appearance-none cursor-pointer" style="background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);">
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] opacity-80 mb-0.5"><span>飽和度 (S)</span><span id="hslSVal">84%</span></div>
+            <input type="range" id="hslS" min="0" max="100" value="84" oninput="updateFromHSL()" class="w-full cursor-pointer">
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] opacity-80 mb-0.5"><span>亮度 (L)</span><span id="hslLVal">67%</span></div>
+            <input type="range" id="hslL" min="0" max="100" value="67" oninput="updateFromHSL()" class="w-full cursor-pointer">
+          </div>
+        </div>
+
+        <!-- 調色盤預設集切換 -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-medium opacity-80">精選色票庫</span>
+            <select id="palettePresetSelect" onchange="renderSwatches(this.value)" class="bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-[11px]">
+              <option value="classic">經典小畫家 28 色</option>
+              <option value="pastel">馬卡龍粉彩</option>
+              <option value="cyberpunk">賽博龐克霓虹</option>
+              <option value="retro">復古 GameBoy / 像素</option>
+              <option value="skin">人像膚色與自然</option>
+            </select>
+          </div>
+          <div id="swatchGrid" class="grid grid-cols-7 gap-1.5">
+            <!-- JS 動態生成色票 -->
+          </div>
+          <p class="text-[10px] opacity-50 mt-1.5">左鍵設為前景色，右鍵設為背景色</p>
+        </div>
+      </div>
+
+      <!-- 2. 多圖層系統面板 -->
+      <div id="panel-layers" class="right-panel hidden p-3 flex-1 overflow-y-auto flex flex-col gap-2.5">
+        <!-- 圖層控制列 -->
+        <div class="flex items-center justify-between gap-1">
+          <button onclick="addLayer()" class="ui-btn flex-1 py-1.5 px-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center justify-center gap-1">
+            <i class="fa-solid fa-plus"></i>新增圖層
+          </button>
+          <button onclick="duplicateActiveLayer()" class="ui-btn p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs" title="複製目前圖層">
+            <i class="fa-regular fa-copy"></i>
+          </button>
+          <button onclick="mergeLayerDown()" class="ui-btn p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs" title="向下合併圖層">
+            <i class="fa-solid fa-compress"></i>
+          </button>
+          <button onclick="deleteActiveLayer()" class="ui-btn p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/70 text-rose-400 text-xs" title="刪除目前圖層">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+
+        <!-- 混合模式與不透明度 -->
+        <div class="bg-slate-800/50 rounded-xl p-2 space-y-2 text-xs">
+          <div class="flex items-center justify-between gap-2">
+            <span class="opacity-75 shrink-0">混合模式:</span>
+            <select id="layerBlendMode" onchange="updateActiveLayerProps()" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs flex-1">
+              <option value="source-over">正常 (Normal)</option>
+              <option value="multiply">色彩增值 (Multiply)</option>
+              <option value="screen">濾色 (Screen)</option>
+              <option value="overlay">覆蓋 (Overlay)</option>
+              <option value="difference">差異化 (Difference)</option>
+              <option value="color-dodge">加亮顏色 (Color Dodge)</option>
+              <option value="hue">色相 (Hue)</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="opacity-75 shrink-0">不透明度:</span>
+            <input type="range" id="layerOpacityRange" min="0" max="100" value="100" oninput="updateActiveLayerProps()" class="flex-1 cursor-pointer">
+            <span id="layerOpacityText" class="w-9 text-right font-mono">100%</span>
+          </div>
+        </div>
+
+        <!-- 圖層清單 (由上至下顯示) -->
+        <div id="layerList" class="flex-1 overflow-y-auto space-y-1.5 pr-0.5">
+          <!-- JS 動態生成圖層項目 -->
+        </div>
+      </div>
+
+      <!-- 3. 濾鏡與特效面板 (MS Paint 沒有的強大影像處理) -->
+      <div id="panel-fx" class="right-panel hidden p-3 flex-1 overflow-y-auto space-y-3 text-xs">
+        <p class="text-[11px] opacity-70">對目前選中的圖層套用即時像素濾鏡與藝術特效：</p>
+
+        <!-- 一鍵藝術濾鏡 -->
+        <div class="grid grid-cols-2 gap-1.5">
+          <button onclick="applyFilter('invert')" class="ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-circle-half-stroke text-indigo-400"></i><span>負片反轉</span>
+          </button>
+          <button onclick="applyFilter('grayscale')" class="ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-droplet-slash text-slate-400"></i><span>經典黑白</span>
+          </button>
+          <button onclick="applyFilter('sepia')" class="ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-camera-retro text-amber-400"></i><span>懷舊棕褐</span>
+          </button>
+          <button onclick="applyFilter('pixelate')" class="ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-border-none text-emerald-400"></i><span>馬賽克像素化</span>
+          </button>
+          <button onclick="applyFilter('glitch')" class="ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-bolt text-pink-400"></i><span>賽博 RGB 故障</span>
+          </button>
+          <button onclick="applyFilter('crt')" class="ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-tv text-cyan-400"></i><span>CRT 掃描線</span>
+          </button>
+          <button onclick="applyFilter('blur')" class="ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-smog text-sky-400"></i><span>柔和模糊</span>
+          </button>
+          <button onclick="applyFilter('threshold')" class="ui-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-yin-yang text-purple-400"></i><span>高反差版畫</span>
+          </button>
+        </div>
+
+        <!-- 色彩微調滑桿 -->
+        <div class="bg-slate-800/50 rounded-xl p-2.5 space-y-2.5">
+          <div class="font-semibold text-indigo-400">色彩與光影調整</div>
+          <div>
+            <div class="flex justify-between text-[11px] mb-0.5"><span>亮度調整</span><span id="fxBrightVal">0</span></div>
+            <input type="range" id="fxBright" min="-100" max="100" value="0" oninput="document.getElementById('fxBrightVal').textContent=this.value" class="w-full">
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] mb-0.5"><span>對比度</span><span id="fxContrastVal">0</span></div>
+            <input type="range" id="fxContrast" min="-100" max="100" value="0" oninput="document.getElementById('fxContrastVal').textContent=this.value" class="w-full">
+          </div>
+          <button onclick="applyBrightnessContrast()" class="ui-btn w-full py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium">
+            套用光影調整
+          </button>
+        </div>
+      </div>
+
+      <!-- 4. 歷史紀錄面板 -->
+      <div id="panel-history" class="right-panel hidden p-3 flex-1 overflow-y-auto flex flex-col gap-2 text-xs">
+        <div class="flex items-center justify-between">
+          <span class="opacity-75">操作步驟紀錄</span>
+          <span id="historyCount" class="font-mono text-indigo-400">1 步</span>
+        </div>
+        <div id="historyList" class="flex-1 overflow-y-auto space-y-1">
+          <!-- JS 動態生成歷史步驟 -->
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ================= 彈出對話框區 ================= -->
+
+  <!-- 1. 開新畫布對話框 -->
+  <div id="newCanvasModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="ui-panel bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-base flex items-center gap-2"><i class="fa-regular fa-file text-indigo-400"></i>建立新畫布</h3>
+        <button onclick="closeModal('newCanvasModal')" class="opacity-60 hover:opacity-100"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="grid grid-cols-2 gap-3 text-xs">
+        <div>
+          <label class="block opacity-75 mb-1">寬度 (px)</label>
+          <input type="number" id="newWidth" value="900" min="16" max="4096" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2">
+        </div>
+        <div>
+          <label class="block opacity-75 mb-1">高度 (px)</label>
+          <input type="number" id="newHeight" value="600" min="16" max="4096" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2">
+        </div>
+      </div>
+      <div class="text-xs">
+        <label class="block opacity-75 mb-1.5">快速預設尺寸</label>
+        <div class="grid grid-cols-3 gap-1.5">
+          <button onclick="setNewPreset(800, 600)" class="ui-btn py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700">經典 800×600</button>
+          <button onclick="setNewPreset(1280, 720)" class="ui-btn py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700">HD 1280×720</button>
+          <button onclick="setNewPreset(1080, 1080)" class="ui-btn py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700">IG 正方 1080</button>
+          <button onclick="setNewPreset(64, 64)" class="ui-btn py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700">像素 64×64</button>
+          <button onclick="setNewPreset(32, 32)" class="ui-btn py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700">圖示 32×32</button>
+          <button onclick="setNewPreset(1920, 1080)" class="ui-btn py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700">Full HD</button>
+        </div>
+      </div>
+      <div class="text-xs">
+        <label class="block opacity-75 mb-1">背景底色</label>
+        <select id="newBgType" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2">
+          <option value="white">純白畫紙 (#FFFFFF)</option>
+          <option value="transparent">透明背景 (Transparent)</option>
+          <option value="dark">深邃黑夜 (#0F172A)</option>
+        </select>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeModal('newCanvasModal')" class="ui-btn px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs">取消</button>
+        <button onclick="confirmNewCanvas()" class="ui-btn px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">建立畫布</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 縮時攝影回放對話框 -->
+  <div id="timelapseModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="ui-panel bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-clapperboard text-pink-400"></i>繪畫過程縮時回放</h3>
+        <button onclick="stopTimelapse(); closeModal('timelapseModal')" class="opacity-60 hover:opacity-100"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="bg-slate-950 rounded-xl p-2 flex items-center justify-center overflow-hidden border border-slate-800">
+        <canvas id="timelapseCanvas" class="max-h-[55vh] max-w-full checkerboard rounded"></canvas>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2">
+          <button onclick="playTimelapse()" class="ui-btn px-3 py-1.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-medium flex items-center gap-1.5">
+            <i class="fa-solid fa-play"></i><span>重播縮時</span>
+          </button>
+          <select id="timelapseSpeed" class="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5">
+            <option value="120">1x 正常速度</option>
+            <option value="50" selected>2x 流暢速度</option>
+            <option value="15">5x 極速縮時</option>
+          </select>
+        </div>
+        <span id="timelapseStatus" class="opacity-75 font-mono">準備就緒</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 逐格動畫工作室對話框 -->
+  <div id="animationModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="ui-panel bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-film text-emerald-400"></i>圖層逐格動畫預覽</h3>
+        <button onclick="stopAnimationLoop(); closeModal('animationModal')" class="opacity-60 hover:opacity-100"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p class="text-xs opacity-75">系統會將您建立的每個「圖層」依序當作動畫的一格（Frame）進行循環播放！</p>
+      <div class="bg-slate-950 rounded-xl p-2 flex items-center justify-center border border-slate-800">
+        <canvas id="animCanvas" class="max-h-[50vh] max-w-full checkerboard rounded"></canvas>
+      </div>
+      <div class="flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2">
+          <span>幀率 (FPS):</span>
+          <input type="range" id="animFps" min="1" max="24" value="6" oninput="document.getElementById('animFpsVal').textContent=this.value + ' FPS'">
+          <span id="animFpsVal" class="font-mono text-emerald-400 font-bold">6 FPS</span>
+        </div>
+        <span id="animFrameIndicator" class="font-mono opacity-80">Frame 1 / 1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 全域 Toast 提示訊息 -->
+  <div id="toastMsg" class="fixed bottom-14 left-1/2 -translate-x-1/2 bg-slate-800/95 text-white border border-indigo-500/50 px-4 py-2 rounded-full text-xs shadow-2xl pointer-events-none opacity-0 transition-opacity duration-200 z-50">
+    提示訊息
+  </div>
+
+  <script>
+    /**
+     * ============================================================================
+     * 終極小畫家 Pro - 核心繪圖引擎與狀態管理
+     * ============================================================================
+     */
+    const state = {
+      width: 900,
+      height: 600,
+      zoom: 1,
+      tool: 'pencil',
+      primaryColor: '#6366f1',
+      secondaryColor: '#ffffff',
+      brushSize: 8,
+      brushOpacity: 1,
+      shapeFillMode: 'stroke', // 'stroke' | 'fill' | 'both'
+      gradientType: 'linear',  // 'linear' | 'radial'
+      tolerance: 30,
+      selectedEmoji: '✨',
+      fontFamily: 'Noto Sans TC',
+      fontSize: 32,
+      fontBold: false,
+      fontItalic: false,
+      symmetry: 'none',        // 'none' | 'vertical' | 'horizontal' | 'quad' | 'kaleido6' | 'kaleido8' | 'kaleido12'
+      sandboxMode: false,
+      showGrid: false,
+      isDrawing: false,
+      startX: 0,
+      startY: 0,
+      lastX: 0,
+      lastY: 0,
+      points: [],              // 當前筆畫軌跡點 (用於蜘蛛網筆刷、平滑曲線)
+      hueCounter: 0,           // 彩虹霓虹筆刷色相計數
+      layers: [],              // { id, name, canvas, ctx, visible, locked, opacity, blendMode }
+      activeLayerId: null,
+      history: [],             // 歷史快照陣列 (用於 Undo/Redo 與縮時攝影)
+      historyIndex: -1,
+      selection: null,         // { x, y, w, h, imageData, isDragging, dragOffsetX, dragOffsetY }
+      textPos: null,
+      timelapseTimer: null,
+      animTimer: null
+    };
+
+    // DOM 元素快取
+    const mainCanvas = document.getElementById('mainCanvas');
+    const mainCtx = mainCanvas.getContext('2d');
+    const overlayCanvas = document.getElementById('overlayCanvas');
+    const overlayCtx = overlayCanvas.getContext('2d');
+    const sandCanvas = document.getElementById('sandCanvas');
+    const sandCtx = sandCanvas.getContext('2d');
+    const canvasContainer = document.getElementById('canvasContainer');
+
+    // 色票預設集
+    const PALETTES = {
+      classic: [
+        '#000000','#7f7f7f','#880015','#ed1c24','#ff7f27','#fff200','#22b14c',
+        '#00a2e8','#3f48cc','#a349a4','#ffffff','#c3c3c3','#b97a57','#ffaec9',
+        '#ffc90e','#efe4b0','#b5e61d','#99d9ea','#7092be','#c8bfe7','#6366f1',
+        '#ec4899','#14b8a6','#f59e0b','#8b5cf6','#10b981','#06b6d4','#f43f5e'
+      ],
+      pastel: [
+        '#ffadad','#ffd6a5','#fdffb6','#caffbf','#9bf6ff','#a0c4ff','#bdb2ff',
+        '#ffc6ff','#fffffc','#f8edeb','#fcd5ce','#fae1dd','#e8e8e4','#d8e2dc',
+        '#ece4db','#ffe5d9','#ffd7ba','#fec89a','#d8bbff','#c8b6ff','#b8c0ff',
+        '#bbd0ff','#bde0fe','#a2d2ff','#cdb4db','#ffc8dd','#ffafcc','#fde2e4'
+      ],
+      cyberpunk: [
+        '#090014','#1a0033','#330066','#ff007f','#ff00ff','#00ffff','#00ff9f',
+        '#ffff00','#ff5500','#7700ff','#120458','#ff2a6d','#05d9e8','#d1f7ff',
+        '#01012b','#f706cf','#fd1d53','#ff9e00','#00f0ff','#39ff14','#bc13fe',
+        '#fe019a','#ff073a','#cfff04','#00ffcc','#7df9ff','#ff6ec7','#ffffff'
+      ],
+      retro: [
+        '#0f380f','#306230','#8bac0f','#9bbc0f','#1d2b53','#7e2553','#008751',
+        '#ab5236','#5f574f','#c2c3c7','#fff1e8','#ff004d','#ffa300','#ffec27',
+        '#00e436','#29adff','#83769c','#ff77a8','#ffccaa','#000000','#222034',
+        '#45283c','#663931','#8f563b','#df7126','#d9a066','#eec39a','#fbf236'
+      ],
+      skin: [
+        '#2d1b14','#4a2c20','#6b3e2e','#8d5524','#c68642','#e0ac69','#f1c27d',
+        '#ffdbac','#ffe5c8','#fff0db','#3b2f2f','#5c4033','#8b5a2b','#a0522d',
+        '#cd853f','#deb887','#f5deb3','#faebd7','#2e473b','#4a7c59','#68b0ab',
+        '#8fc0a9','#c8d5b9','#faf3dd','#4a6fa5','#166088','#4f6d7a','#dbe9ee'
+      ]
+    };
+
+    /**
+     * 初始化應用程式
+     */
+    function initApp() {
+      renderSwatches('classic');
+      createInitialCanvas(900, 600, 'white');
+      updateDynamicToolOptions();
+      bindEvents();
+      requestAnimationFrame(sandboxLoop);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastMsg');
+      toast.textContent = msg;
+      toast.classList.remove('opacity-0');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.add('opacity-0'), 2200);
+    }
+
+    /**
+     * ============================================================================
+     * 圖層系統 (Multi-Layer Architecture)
+     * ============================================================================
+     */
+    function createLayerObject(name, fillStyle = null) {
+      const canvas = document.createElement('canvas');
+      canvas.width = state.width;
+      canvas.height = state.height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (fillStyle) {
+        ctx.fillStyle = fillStyle;
+        ctx.fillRect(0, 0, state.width, state.height);
+      }
+      return {
+        id: 'layer_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        name,
+        canvas,
+        ctx,
+        visible: true,
+        locked: false,
+        opacity: 1,
+        blendMode: 'source-over'
+      };
+    }
+
+    function getActiveLayer() {
+      return state.layers.find(l => l.id === state.activeLayerId) || state.layers[0];
+    }
+
+    function createInitialCanvas(w, h, bgType) {
+      state.width = w;
+      state.height = h;
+      mainCanvas.width = overlayCanvas.width = sandCanvas.width = w;
+      mainCanvas.height = overlayCanvas.height = sandCanvas.height = h;
+      canvasContainer.style.width = w + 'px';
+      canvasContainer.style.height = h + 'px';
+      document.getElementById('canvasDimText').textContent = `${w} × ${h}`;
+
+      state.layers = [];
+      const bgFill = bgType === 'white' ? '#ffffff' : (bgType === 'dark' ? '#0f172a' : null);
+      const baseLayer = createLayerObject('背景圖層', bgFill);
+      const drawLayer = createLayerObject('繪圖圖層 1');
+      state.layers.push(baseLayer, drawLayer);
+      state.activeLayerId = drawLayer.id;
+
+      state.history = [];
+      state.historyIndex = -1;
+      state.selection = null;
+      updateSelectionUI();
+
+      renderAllLayers();
+      renderLayerList();
+      saveHistory('建立新畫布');
+      fitCanvasToScreen();
+    }
+
+    function addLayer() {
+      const newL = createLayerObject(`圖層 ${state.layers.length + 1}`);
+      const idx = state.layers.findIndex(l => l.id === state.activeLayerId);
+      state.layers.splice(idx + 1, 0, newL);
+      state.activeLayerId = newL.id;
+      renderLayerList();
+      renderAllLayers();
+      saveHistory('新增圖層');
+    }
+
+    function duplicateActiveLayer() {
+      const active = getActiveLayer();
+      if (!active) return;
+      const copy = createLayerObject(active.name + ' 副本');
+      copy.ctx.drawImage(active.canvas, 0, 0);
+      copy.opacity = active.opacity;
+      copy.blendMode = active.blendMode;
+      const idx = state.layers.findIndex(l => l.id === active.id);
+      state.layers.splice(idx + 1, 0, copy);
+      state.activeLayerId = copy.id;
+      renderLayerList();
+      renderAllLayers();
+      saveHistory('複製圖層');
+    }
+
+    function deleteActiveLayer() {
+      if (state.layers.length <= 1) {
+        showToast('至少必須保留一個圖層！');
+        return;
+      }
+      const idx = state.layers.findIndex(l => l.id === state.activeLayerId);
+      state.layers.splice(idx, 1);
+      state.activeLayerId = state.layers[Math.max(0, idx - 1)].id;
+      renderLayerList();
+      renderAllLayers();
+      saveHistory('刪除圖層');
+    }
+
+    function mergeLayerDown() {
+      const idx = state.layers.findIndex(l => l.id === state.activeLayerId);
+      if (idx <= 0) {
+        showToast('已經是最底層，無法再向下合併');
+        return;
+      }
+      const upper = state.layers[idx];
+      const lower = state.layers[idx - 1];
+      lower.ctx.save();
+      lower.ctx.globalAlpha = upper.opacity;
+      lower.ctx.globalCompositeOperation = upper.blendMode;
+      lower.ctx.drawImage(upper.canvas, 0, 0);
+      lower.ctx.restore();
+
+      state.layers.splice(idx, 1);
+      state.activeLayerId = lower.id;
+      renderLayerList();
+      renderAllLayers();
+      saveHistory('向下合併圖層');
+      showToast('已向下合併圖層');
+    }
+
+    function moveLayerOrder(id, dir) {
+      const idx = state.layers.findIndex(l => l.id === id);
+      const target = idx + dir;
+      if (target < 0 || target >= state.layers.length) return;
+      const [moved] = state.layers.splice(idx, 1);
+      state.layers.splice(target, 0, moved);
+      renderLayerList();
+      renderAllLayers();
+      saveHistory('調整圖層順序');
+    }
+
+    function toggleLayerVisibility(id, e) {
+      e.stopPropagation();
+      const layer = state.layers.find(l => l.id === id);
+      if (layer) {
+        layer.visible = !layer.visible;
+        renderLayerList();
+        renderAllLayers();
+      }
+    }
+
+    function toggleLayerLock(id, e) {
+      e.stopPropagation();
+      const layer = state.layers.find(l => l.id === id);
+      if (layer) {
+        layer.locked = !layer.locked;
+        renderLayerList();
+      }
+    }
+
+    function selectLayer(id) {
+      if (state.selection) commitSelection();
+      state.activeLayerId = id;
+      const active = getActiveLayer();
+      if (active) {
+        document.getElementById('layerBlendMode').value = active.blendMode;
+        document.getElementById('layerOpacityRange').value = Math.round(active.opacity * 100);
+        document.getElementById('layerOpacityText').textContent = Math.round(active.opacity * 100) + '%';
+      }
+      renderLayerList();
+    }
+
+    function updateActiveLayerProps() {
+      const active = getActiveLayer();
+      if (!active) return;
+      active.blendMode = document.getElementById('layerBlendMode').value;
+      const op = parseInt(document.getElementById('layerOpacityRange').value, 10);
+      active.opacity = op / 100;
+      document.getElementById('layerOpacityText').textContent = op + '%';
+      renderAllLayers();
+    }
+
+    function renderLayerList() {
+      const list = document.getElementById('layerList');
+      list.innerHTML = '';
+      // 由上層往下層渲染清單
+      for (let i = state.layers.length - 1; i >= 0; i--) {
+        const l = state.layers[i];
+        const isActive = l.id === state.activeLayerId;
+        const item = document.createElement('div');
+        item.onclick = () => selectLayer(l.id);
+        item.className = `p-2 rounded-xl border flex items-center gap-2 cursor-pointer transition text-xs ${
+          isActive
+            ? 'bg-indigo-600/20 border-indigo-500 text-white'
+            : 'bg-slate-800/60 border-slate-700/60 hover:bg-slate-800'
+        }`;
+
+        // 縮圖預覽
+        const thumb = document.createElement('canvas');
+        thumb.width = 36;
+        thumb.height = 24;
+        thumb.className = 'rounded border border-slate-600 checkerboard shrink-0';
+        thumb.getContext('2d').drawImage(l.canvas, 0, 0, 36, 24);
+
+        item.innerHTML = `
+          <button onclick="toggleLayerVisibility('${l.id}', event)" class="w-5 text-center opacity-80 hover:opacity-100" title="顯示/隱藏">
+            <i class="fa-solid ${l.visible ? 'fa-eye text-indigo-400' : 'fa-eye-slash opacity-40'}"></i>
+          </button>
+          <div class="thumb-slot"></div>
+          <div class="flex-1 min-w-0">
+            <div class="truncate font-medium" ondblclick="renameLayer('${l.id}', event)">${l.name}</div>
+            <div class="text-[10px] opacity-50">${Math.round(l.opacity * 100)}% · ${l.blendMode}</div>
+          </div>
+          <button onclick="toggleLayerLock('${l.id}', event)" class="opacity-70 hover:opacity-100" title="鎖定/解鎖">
+            <i class="fa-solid ${l.locked ? 'fa-lock text-amber-400' : 'fa-lock-open opacity-30'}"></i>
+          </button>
+          <div class="flex flex-col text-[10px] opacity-60">
+            <button onclick="moveLayerOrder('${l.id}', 1); event.stopPropagation();" class="hover:text-white" title="上移一層"><i class="fa-solid fa-chevron-up"></i></button>
+            <button onclick="moveLayerOrder('${l.id}', -1); event.stopPropagation();" class="hover:text-white" title="下移一層"><i class="fa-solid fa-chevron-down"></i></button>
+          </div>
+        `;
+        item.querySelector('.thumb-slot').appendChild(thumb);
+        list.appendChild(item);
+      }
+    }
+
+    function renameLayer(id, e) {
+      e.stopPropagation();
+      const layer = state.layers.find(l => l.id === id);
+      if (!layer) return;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = layer.name;
+      input.className = 'bg-slate-900 text-white px-1 py-0.5 rounded border border-indigo-400 w-full text-xs';
+      e.target.replaceWith(input);
+      input.focus();
+      input.onblur = () => {
+        if (input.value.trim()) layer.name = input.value.trim();
+        renderLayerList();
+      };
+      input.onkeydown = (ev) => { if (ev.key === 'Enter') input.blur(); };
+    }
+
+    /**
+     * 將所有可見圖層合成繪製到主顯示畫布
+     */
+    function renderAllLayers() {
+      mainCtx.clearRect(0, 0, state.width, state.height);
+      for (const layer of state.layers) {
+        if (!layer.visible) continue;
+        mainCtx.save();
+        mainCtx.globalAlpha = layer.opacity;
+        mainCtx.globalCompositeOperation = layer.blendMode;
+        mainCtx.drawImage(layer.canvas, 0, 0);
+        mainCtx.restore();
+      }
+      renderLayerListThumbnailsOnly();
+    }
+
+    function renderLayerListThumbnailsOnly() {
+      const thumbs = document.querySelectorAll('#layerList .thumb-slot canvas');
+      let idx = state.layers.length - 1;
+      thumbs.forEach(c => {
+        if (state.layers[idx]) {
+          const ctx = c.getContext('2d');
+          ctx.clearRect(0, 0, 36, 24);
+          ctx.drawImage(state.layers[idx].canvas, 0, 0, 36, 24);
+        }
+        idx--;
+      });
+    }
+
+    /**
+     * ============================================================================
+     * 歷史紀錄系統 (Undo / Redo 與縮時攝影資料來源)
+     * ============================================================================
+     */
+    function saveHistory(actionName) {
+      // 截斷重做分支
+      if (state.historyIndex < state.history.length - 1) {
+        state.history = state.history.slice(0, state.historyIndex + 1);
+      }
+      // 儲存每個圖層的影像快照以及合成縮圖 (供縮時回放使用)
+      const snapshot = {
+        name: actionName,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        activeLayerId: state.activeLayerId,
+        compositeDataUrl: mainCanvas.toDataURL('image/png'),
+        layersData: state.layers.map(l => ({
+          id: l.id,
+          name: l.name,
+          visible: l.visible,
+          locked: l.locked,
+          opacity: l.opacity,
+          blendMode: l.blendMode,
+          imageData: l.ctx.getImageData(0, 0, state.width, state.height)
+        }))
+      };
+      state.history.push(snapshot);
+      // 最多保留 45 步歷史紀錄以節省記憶體
+      if (state.history.length > 45) {
+        state.history.shift();
+      } else {
+        state.historyIndex++;
+      }
+      updateHistoryUI();
+    }
+
+    function restoreHistory(index) {
+      if (index < 0 || index >= state.history.length) return;
+      state.historyIndex = index;
+      const snap = state.history[index];
+      state.layers = snap.layersData.map(ld => {
+        const l = createLayerObject(ld.name);
+        l.id = ld.id;
+        l.visible = ld.visible;
+        l.locked = ld.locked;
+        l.opacity = ld.opacity;
+        l.blendMode = ld.blendMode;
+        l.ctx.putImageData(ld.imageData, 0, 0);
+        return l;
+      });
+      state.activeLayerId = snap.activeLayerId;
+      renderAllLayers();
+      renderLayerList();
+      updateHistoryUI();
+    }
+
+    function undo() {
+      if (state.historyIndex > 0) {
+        restoreHistory(state.historyIndex - 1);
+        showToast('已復原：' + state.history[state.historyIndex].name);
+      }
+    }
+
+    function redo() {
+      if (state.historyIndex < state.history.length - 1) {
+        restoreHistory(state.historyIndex + 1);
+        showToast('已重做：' + state.history[state.historyIndex].name);
+      }
+    }
+
+    function updateHistoryUI() {
+      document.getElementById('btnUndo').disabled = state.historyIndex <= 0;
+      document.getElementById('btnRedo').disabled = state.historyIndex >= state.history.length - 1;
+      document.getElementById('historyCount').textContent = `${state.historyIndex + 1} / ${state.history.length} 步`;
+
+      const list = document.getElementById('historyList');
+      list.innerHTML = '';
+      state.history.forEach((h, i) => {
+        const div = document.createElement('div');
+        div.onclick = () => restoreHistory(i);
+        div.className = `px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center justify-between ${
+          i === state.historyIndex
+            ? 'bg-indigo-600 text-white font-medium'
+            : i > state.historyIndex
+              ? 'opacity-40 hover:opacity-75 bg-slate-800/40'
+              : 'bg-slate-800/70 hover:bg-slate-800'
+        }`;
+        div.innerHTML = `<span>${i + 1}. ${h.name}</span><span class="text-[10px] opacity-75 font-mono">${h.time}</span>`;
+        list.appendChild(div);
+      });
+      list.scrollTop = list.scrollHeight;
+    }
+
+    /**
+     * ============================================================================
+     * 對稱萬花筒與座標計算引擎
+     * ============================================================================
+     */
+    function setSymmetryMode(mode) {
+      state.symmetry = mode;
+      drawOverlayGuides();
+      if (mode !== 'none') showToast('已啟動萬花筒對稱繪圖模式！');
+    }
+
+    // 根據目前對稱模式，將一組 (x1, y1) -> (x2, y2) 轉換成多組對稱座標陣列
+    function getSymmetryStrokes(x1, y1, x2, y2) {
+      const cx = state.width / 2;
+      const cy = state.height / 2;
+      const strokes = [{ x1, y1, x2, y2 }];
+
+      if (state.symmetry === 'vertical') {
+        strokes.push({ x1: state.width - x1, y1, x2: state.width - x2, y2 });
+      } else if (state.symmetry === 'horizontal') {
+        strokes.push({ x1, y1: state.height - y1, x2, y2: state.height - y2 });
+      } else if (state.symmetry === 'quad') {
+        strokes.push(
+          { x1: state.width - x1, y1, x2: state.width - x2, y2 },
+          { x1, y1: state.height - y1, x2, y2: state.height - y2 },
+          { x1: state.width - x1, y1: state.height - y1, x2: state.width - x2, y2: state.height - y2 }
+        );
+      } else if (state.symmetry.startsWith('kaleido')) {
+        const ways = parseInt(state.symmetry.replace('kaleido', ''), 10);
+        const step = (Math.PI * 2) / ways;
+        const dx1 = x1 - cx, dy1 = y1 - cy;
+        const dx2 = x2 - cx, dy2 = y2 - cy;
+        for (let i = 1; i < ways; i++) {
+          const ang = step * i;
+          const cos = Math.cos(ang), sin = Math.sin(ang);
+          strokes.push({
+            x1: cx + dx1 * cos - dy1 * sin,
+            y1: cy + dx1 * sin + dy1 * cos,
+            x2: cx + dx2 * cos - dy2 * sin,
+            y2: cy + dx2 * sin + dy2 * cos
+          });
+        }
+      }
+      return strokes;
+    }
+
+    function drawOverlayGuides(cursorX = null, cursorY = null) {
+      overlayCtx.clearRect(0, 0, state.width, state.height);
+      const cx = state.width / 2;
+      const cy = state.height / 2;
+
+      // 1. 繪製對稱輔助線
+      if (state.symmetry !== 'none') {
+        overlayCtx.save();
+        overlayCtx.strokeStyle = 'rgba(34, 211, 238, 0.55)';
+        overlayCtx.lineWidth = 1;
+        overlayCtx.setLineDash([5, 5]);
+
+        if (state.symmetry === 'vertical' || state.symmetry === 'quad') {
+          overlayCtx.beginPath();
+          overlayCtx.moveTo(cx, 0);
+          overlayCtx.lineTo(cx, state.height);
+          overlayCtx.stroke();
+        }
+        if (state.symmetry === 'horizontal' || state.symmetry === 'quad') {
+          overlayCtx.beginPath();
+          overlayCtx.moveTo(0, cy);
+          overlayCtx.lineTo(state.width, cy);
+          overlayCtx.stroke();
+        }
+        if (state.symmetry.startsWith('kaleido')) {
+          const ways = parseInt(state.symmetry.replace('kaleido', ''), 10);
+          const radius = Math.hypot(cx, cy);
+          for (let i = 0; i < ways; i++) {
+            const ang = (Math.PI * 2 / ways) * i;
+            overlayCtx.beginPath();
+            overlayCtx.moveTo(cx, cy);
+            overlayCtx.lineTo(cx + Math.cos(ang) * radius, cy + Math.sin(ang) * radius);
+            overlayCtx.stroke();
+          }
+        }
+        overlayCtx.restore();
+      }
+
+      // 2. 繪製選取框 (螞蟻線動畫)
+      if (state.selection) {
+        const s = state.selection;
+        overlayCtx.save();
+        if (s.imageData) {
+          // 預覽浮動選取影像
+          const tempC = document.createElement('canvas');
+          tempC.width = s.imageData.width;
+          tempC.height = s.imageData.height;
+          tempC.getContext('2d').putImageData(s.imageData, 0, 0);
+          overlayCtx.drawImage(tempC, s.x, s.y, s.w, s.h);
+        }
+        overlayCtx.strokeStyle = '#ffffff';
+        overlayCtx.lineWidth = 1.5;
+        overlayCtx.strokeRect(s.x, s.y, s.w, s.h);
+        overlayCtx.strokeStyle = '#000000';
+        overlayCtx.setLineDash([4, 4]);
+        overlayCtx.strokeRect(s.x, s.y, s.w, s.h);
+        overlayCtx.restore();
+      }
+
+      // 3. 繪製筆刷大小預覽圓圈
+      if (cursorX !== null && cursorY !== null && ['pencil','brush','calligraphy','airbrush','watercolor','eraser','neon','web','pixel'].includes(state.tool)) {
+        overlayCtx.save();
+        overlayCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        overlayCtx.lineWidth = 1;
+        overlayCtx.beginPath();
+        overlayCtx.arc(cursorX, cursorY, Math.max(2, state.brushSize / 2), 0, Math.PI * 2);
+        overlayCtx.stroke();
+        overlayCtx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+        overlayCtx.beginPath();
+        overlayCtx.arc(cursorX, cursorY, Math.max(3, state.brushSize / 2 + 1), 0, Math.PI * 2);
+        overlayCtx.stroke();
+        overlayCtx.restore();
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 繪圖工具與魔法筆刷核心實作
+     * ============================================================================
+     */
+    function getCanvasCoords(e) {
+      const rect = overlayCanvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = (clientX - rect.left) * (state.width / rect.width);
+      const y = (clientY - rect.top) * (state.height / rect.height);
+      return { x, y };
+    }
+
+    function handlePointerDown(e) {
+      if (e.button === 2) return; // 右鍵留給吸色或選單
+      const activeLayer = getActiveLayer();
+      if (!activeLayer || activeLayer.locked) {
+        showToast('目前圖層已鎖定，請先解鎖！');
+        return;
+      }
+
+      const { x, y } = getCanvasCoords(e);
+      state.isDrawing = true;
+      state.startX = x;
+      state.startY = y;
+      state.lastX = x;
+      state.lastY = y;
+      state.points = [{ x, y }];
+
+      // 重力流沙模式攔截
+      if (state.sandboxMode) {
+        spawnSandParticles(Math.floor(x), Math.floor(y));
+        return;
+      }
+
+      // 選取工具互動
+      if (state.tool === 'select') {
+        if (state.selection && x >= state.selection.x && x <= state.selection.x + state.selection.w && y >= state.selection.y && y <= state.selection.y + state.selection.h) {
+          state.selection.isDragging = true;
+          state.selection.dragOffsetX = x - state.selection.x;
+          state.selection.dragOffsetY = y - state.selection.y;
+          return;
+        } else if (state.selection) {
+          commitSelection();
+        }
+        state.selection = { x, y, w: 0, h: 0, imageData: null, isDragging: false };
+        return;
+      }
+
+      // 魔術棒選取
+      if (state.tool === 'wand') {
+        if (state.selection) commitSelection();
+        magicWandSelect(Math.floor(x), Math.floor(y));
+        state.isDrawing = false;
+        return;
+      }
+
+      // 滴管吸色
+      if (state.tool === 'eyedropper') {
+        pickColorAt(Math.floor(x), Math.floor(y));
+        state.isDrawing = false;
+        return;
+      }
+
+      // 油漆桶填滿
+      if (state.tool === 'bucket') {
+        floodFill(activeLayer.ctx, Math.floor(x), Math.floor(y), state.primaryColor, state.tolerance);
+        renderAllLayers();
+        saveHistory('油漆桶填色');
+        state.isDrawing = false;
+        return;
+      }
+
+      // 文字工具
+      if (state.tool === 'text') {
+        openTextOverlay(x, y);
+        state.isDrawing = false;
+        return;
+      }
+
+      // 筆刷類工具：落下第一點
+      if (['pencil','brush','calligraphy','airbrush','watercolor','eraser','neon','web','pixel','emoji'].includes(state.tool)) {
+        drawStrokeSegment(activeLayer.ctx, x, y, x, y);
+        renderAllLayers();
+      }
+    }
+
+    function handlePointerMove(e) {
+      const { x, y } = getCanvasCoords(e);
+      document.getElementById('cursorPos').textContent = `X: ${Math.round(x)}, Y: ${Math.round(y)}`;
+
+      if (!state.isDrawing) {
+        drawOverlayGuides(x, y);
+        return;
+      }
+
+      if (state.sandboxMode) {
+        spawnSandParticles(Math.floor(x), Math.floor(y));
+        return;
+      }
+
+      const activeLayer = getActiveLayer();
+
+      // 選取框拖曳或拉框
+      if (state.tool === 'select' && state.selection) {
+        if (state.selection.isDragging) {
+          state.selection.x = x - state.selection.dragOffsetX;
+          state.selection.y = y - state.selection.dragOffsetY;
+        } else {
+          state.selection.w = x - state.startX;
+          state.selection.h = y - state.startY;
+        }
+        drawOverlayGuides();
+        return;
+      }
+
+      // 幾何形狀與漸層即時預覽
+      if (['line','rect','roundrect','circle','star','arrow','bubble','heart','gradient'].includes(state.tool)) {
+        drawOverlayGuides();
+        drawShapePreview(overlayCtx, state.startX, state.startY, x, y, e.shiftKey);
+        return;
+      }
+
+      // 自由繪製筆刷
+      state.points.push({ x, y });
+      drawStrokeSegment(activeLayer.ctx, state.lastX, state.lastY, x, y);
+      state.lastX = x;
+      state.lastY = y;
+      renderAllLayers();
+      drawOverlayGuides(x, y);
+    }
+
+    function handlePointerUp(e) {
+      if (!state.isDrawing) return;
+      state.isDrawing = false;
+
+      if (state.sandboxMode) return;
+
+      const { x, y } = getCanvasCoords(e);
+      const activeLayer = getActiveLayer();
+
+      // 完成選取框建立
+      if (state.tool === 'select' && state.selection) {
+        if (state.selection.isDragging) {
+          state.selection.isDragging = false;
+        } else {
+          // 正規化負寬高
+          let sx = Math.min(state.startX, x);
+          let sy = Math.min(state.startY, y);
+          let sw = Math.abs(x - state.startX);
+          let sh = Math.abs(y - state.startY);
+          if (sw > 2 && sh > 2) {
+            sx = Math.max(0, Math.floor(sx));
+            sy = Math.max(0, Math.floor(sy));
+            sw = Math.min(state.width - sx, Math.floor(sw));
+            sh = Math.min(state.height - sy, Math.floor(sh));
+            const imgData = activeLayer.ctx.getImageData(sx, sy, sw, sh);
+            activeLayer.ctx.clearRect(sx, sy, sw, sh);
+            state.selection = { x: sx, y: sy, w: sw, h: sh, imageData: imgData, isDragging: false };
+            renderAllLayers();
+            updateSelectionUI();
+          } else {
+            state.selection = null;
+          }
+        }
+        drawOverlayGuides();
+        return;
+      }
+
+      // 確認繪製幾何形狀或漸層到圖層
+      if (['line','rect','roundrect','circle','star','arrow','bubble','heart','gradient'].includes(state.tool)) {
+        drawShapePreview(activeLayer.ctx, state.startX, state.startY, x, y, e.shiftKey);
+        drawOverlayGuides();
+        renderAllLayers();
+        saveHistory('繪製形狀/漸層');
+        return;
+      }
+
+      const toolLabels = {
+        pencil: '鉛筆繪圖', brush: '畫筆繪圖', calligraphy: '書法筆觸',
+        airbrush: '噴漆噴塗', watercolor: '水彩暈染', eraser: '橡皮擦擦除',
+        neon: '彩虹霓虹筆刷', web: '蜘蛛網特效筆刷', pixel: '8-Bit 像素繪製', emoji: 'Emoji 貼圖噴灑'
+      };
+      saveHistory(toolLabels[state.tool] || '筆刷繪圖');
+    }
+
+    /**
+     * 核心筆畫渲染函式 (支援所有標準與魔法筆刷 + 萬花筒對稱)
+     */
+    function drawStrokeSegment(ctx, x1, y1, x2, y2) {
+      const strokes = getSymmetryStrokes(x1, y1, x2, y2);
+      ctx.save();
+      ctx.globalAlpha = state.brushOpacity;
+
+      for (const s of strokes) {
+        switch (state.tool) {
+          case 'pencil': {
+            ctx.strokeStyle = state.primaryColor;
+            ctx.lineWidth = state.brushSize;
+            ctx.lineCap = 'square';
+            ctx.lineJoin = 'miter';
+            ctx.beginPath();
+            ctx.moveTo(Math.round(s.x1), Math.round(s.y1));
+            ctx.lineTo(Math.round(s.x2), Math.round(s.y2));
+            ctx.stroke();
+            break;
+          }
+          case 'brush': {
+            ctx.strokeStyle = state.primaryColor;
+            ctx.lineWidth = state.brushSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.shadowBlur = Math.max(1, state.brushSize * 0.15);
+            ctx.shadowColor = state.primaryColor;
+            ctx.beginPath();
+            ctx.moveTo(s.x1, s.y1);
+            ctx.lineTo(s.x2, s.y2);
+            ctx.stroke();
+            break;
+          }
+          case 'calligraphy': {
+            ctx.fillStyle = state.primaryColor;
+            const dist = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
+            const steps = Math.max(1, Math.ceil(dist));
+            const w = state.brushSize * 1.4;
+            const h = Math.max(2, state.brushSize * 0.35);
+            for (let i = 0; i <= steps; i++) {
+              const t = i / steps;
+              const px = s.x1 + (s.x2 - s.x1) * t;
+              const py = s.y1 + (s.y2 - s.y1) * t;
+              ctx.save();
+              ctx.translate(px, py);
+              ctx.rotate(-Math.PI / 6); // 30度書法筆鋒角度
+              ctx.fillRect(-w / 2, -h / 2, w, h);
+              ctx.restore();
+            }
+            break;
+          }
+          case 'airbrush': {
+            ctx.fillStyle = state.primaryColor;
+            const radius = state.brushSize * 1.5;
+            const density = Math.max(10, state.brushSize * 2);
+            for (let i = 0; i < density; i++) {
+              const angle = Math.random() * Math.PI * 2;
+              const r = Math.random() * radius;
+              ctx.fillRect(s.x2 + Math.cos(angle) * r, s.y2 + Math.sin(angle) * r, 1.5, 1.5);
+            }
+            break;
+          }
+          case 'watercolor': {
+            ctx.globalAlpha = state.brushOpacity * 0.08;
+            ctx.fillStyle = state.primaryColor;
+            const dist = Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
+            const steps = Math.max(1, Math.ceil(dist / 2));
+            for (let i = 0; i <= steps; i++) {
+              const t = i / steps;
+              const px = s.x1 + (s.x2 - s.x1) * t;
+              const py = s.y1 + (s.y2 - s.y1) * t;
+              ctx.beginPath();
+              ctx.arc(px + (Math.random() - 0.5) * 4, py + (Math.random() - 0.5) * 4, state.brushSize * (0.7 + Math.random() * 0.4), 0, Math.PI * 2);
+              ctx.fill();
+            }
+            break;
+          }
+          case 'eraser': {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.strokeStyle = 'rgba(0,0,0,1)';
+            ctx.lineWidth = state.brushSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(s.x1, s.y1);
+            ctx.lineTo(s.x2, s.y2);
+            ctx.stroke();
+            break;
+          }
+          case 'neon': {
+            state.hueCounter = (state.hueCounter + 4) % 360;
+            const neonColor = `hsl(${state.hueCounter}, 100%, 55%)`;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = Math.max(2, state.brushSize * 0.45);
+            ctx.lineCap = 'round';
+            ctx.shadowBlur = state.brushSize * 1.6;
+            ctx.shadowColor = neonColor;
+            ctx.beginPath();
+            ctx.moveTo(s.x1, s.y1);
+            ctx.lineTo(s.x2, s.y2);
+            ctx.stroke();
+            // 雙層外光暈增強
+            ctx.strokeStyle = neonColor;
+            ctx.lineWidth = state.brushSize * 0.8;
+            ctx.stroke();
+            break;
+          }
+          case 'web': {
+            ctx.strokeStyle = state.primaryColor;
+            ctx.lineWidth = Math.max(1, state.brushSize * 0.15);
+            ctx.globalAlpha = state.brushOpacity * 0.35;
+            // 主線
+            ctx.beginPath();
+            ctx.moveTo(s.x1, s.y1);
+            ctx.lineTo(s.x2, s.y2);
+            ctx.stroke();
+            // 連接歷史鄰近點產生蜘蛛網/素描毛邊效果
+            const offsetX = s.x2 - x2;
+            const offsetY = s.y2 - y2;
+            for (let i = Math.max(0, state.points.length - 25); i < state.points.length; i++) {
+              const pt = state.points[i];
+              const d = Math.hypot(pt.x - x2, pt.y - y2);
+              if (d < state.brushSize * 6 && Math.random() > 0.45) {
+                ctx.beginPath();
+                ctx.moveTo(s.x2, s.y2);
+                ctx.lineTo(pt.x + offsetX, pt.y + offsetY);
+                ctx.stroke();
+              }
+            }
+            break;
+          }
+          case 'pixel': {
+            const gridSize = Math.max(4, Math.round(state.brushSize));
+            const gx = Math.floor(s.x2 / gridSize) * gridSize;
+            const gy = Math.floor(s.y2 / gridSize) * gridSize;
+            ctx.fillStyle = state.primaryColor;
+            ctx.fillRect(gx, gy, gridSize, gridSize);
+            break;
+          }
+          case 'emoji': {
+            const dist = Math.hypot(x2 - x1, y2 - y1);
+            if (dist === 0 || dist > state.brushSize * 0.8) {
+              ctx.font = `${Math.max(16, state.brushSize * 2.2)}px serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.save();
+              ctx.translate(s.x2, s.y2);
+              ctx.rotate((Math.random() - 0.5) * 0.6);
+              ctx.fillText(state.selectedEmoji, 0, 0);
+              ctx.restore();
+            }
+            break;
+          }
+        }
+      }
+      ctx.restore();
+    }
+
+    /**
+     * 繪製幾何形狀與漸層 (支援 Shift 正比例鎖定與對稱)
+     */
+    function drawShapePreview(ctx, x1, y1, x2, y2, lockRatio) {
+      if (lockRatio && state.tool !== 'line' && state.tool !== 'gradient') {
+        const size = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
+        x2 = x1 + (x2 >= x1 ? size : -size);
+        y2 = y1 + (y2 >= y1 ? size : -size);
+      }
+
+      if (state.tool === 'gradient') {
+        ctx.save();
+        ctx.globalAlpha = state.brushOpacity;
+        let grad;
+        if (state.gradientType === 'linear') {
+          grad = ctx.createLinearGradient(x1, y1, x2, y2);
+        } else {
+          const r = Math.max(1, Math.hypot(x2 - x1, y2 - y1));
+          grad = ctx.createRadialGradient(x1, y1, 0, x1, y1, r);
+        }
+        grad.addColorStop(0, state.primaryColor);
+        grad.addColorStop(1, state.secondaryColor);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, state.width, state.height);
+        ctx.restore();
+        return;
+      }
+
+      const strokes = getSymmetryStrokes(x1, y1, x2, y2);
+      ctx.save();
+      ctx.globalAlpha = state.brushOpacity;
+      ctx.strokeStyle = state.primaryColor;
+      ctx.fillStyle = state.shapeFillMode === 'both' ? state.secondaryColor : state.primaryColor;
+      ctx.lineWidth = state.brushSize;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      for (const s of strokes) {
+        const left = Math.min(s.x1, s.x2);
+        const top = Math.min(s.y1, s.y2);
+        const w = Math.abs(s.x2 - s.x1);
+        const h = Math.abs(s.y2 - s.y1);
+
+        ctx.beginPath();
+        if (state.tool === 'line') {
+          ctx.moveTo(s.x1, s.y1);
+          ctx.lineTo(s.x2, s.y2);
+          ctx.stroke();
+          continue;
+        } else if (state.tool === 'rect') {
+          ctx.rect(left, top, w, h);
+        } else if (state.tool === 'roundrect') {
+          const r = Math.min(24, w * 0.2, h * 0.2);
+          ctx.roundRect(left, top, w, h, r);
+        } else if (state.tool === 'circle') {
+          ctx.ellipse(left + w / 2, top + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+        } else if (state.tool === 'star') {
+          const cx = left + w / 2, cy = top + h / 2;
+          const outerR = Math.min(w, h) / 2;
+          const innerR = outerR * 0.45;
+          for (let i = 0; i < 10; i++) {
+            const r = i % 2 === 0 ? outerR : innerR;
+            const ang = (Math.PI / 5) * i - Math.PI / 2;
+            const px = cx + Math.cos(ang) * r;
+            const py = cy + Math.sin(ang) * r;
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+        } else if (state.tool === 'arrow') {
+          const headLen = Math.max(15, state.brushSize * 3);
+          const angle = Math.atan2(s.y2 - s.y1, s.x2 - s.x1);
+          ctx.moveTo(s.x1, s.y1);
+          ctx.lineTo(s.x2, s.y2);
+          ctx.lineTo(s.x2 - headLen * Math.cos(angle - Math.PI / 6), s.y2 - headLen * Math.sin(angle - Math.PI / 6));
+          ctx.moveTo(s.x2, s.y2);
+          ctx.lineTo(s.x2 - headLen * Math.cos(angle + Math.PI / 6), s.y2 - headLen * Math.sin(angle + Math.PI / 6));
+          ctx.stroke();
+          continue;
+        } else if (state.tool === 'bubble') {
+          const r = Math.min(16, w * 0.15, h * 0.15);
+          const bh = h * 0.8;
+          ctx.roundRect(left, top, w, bh, r);
+          ctx.moveTo(left + w * 0.25, top + bh);
+          ctx.lineTo(left + w * 0.15, top + h);
+          ctx.lineTo(left + w * 0.42, top + bh);
+        } else if (state.tool === 'heart') {
+          const cx = left + w / 2;
+          ctx.moveTo(cx, top + h * 0.28);
+          ctx.bezierCurveTo(cx, top, left, top, left, top + h * 0.35);
+          ctx.bezierCurveTo(left, top + h * 0.65, cx, top + h * 0.85, cx, top + h);
+          ctx.bezierCurveTo(cx, top + h * 0.85, left + w, top + h * 0.65, left + w, top + h * 0.35);
+          ctx.bezierCurveTo(left + w, top, cx, top, cx, top + h * 0.28);
+        }
+
+        if (state.shapeFillMode === 'fill' || state.shapeFillMode === 'both') ctx.fill();
+        if (state.shapeFillMode === 'stroke' || state.shapeFillMode === 'both') ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    /**
+     * ============================================================================
+     * 油漆桶 Flood Fill 與魔術棒 Magic Wand 演算法
+     * ============================================================================
+     */
+    function hexToRgba(hex) {
+      const clean = hex.replace('#', '');
+      const num = parseInt(clean, 16);
+      return [(num >> 16) & 255, (num >> 8) & 255, num & 255, Math.round(state.brushOpacity * 255)];
+    }
+
+    function floodFill(ctx, startX, startY, fillHex, tolerance) {
+      if (startX < 0 || startX >= state.width || startY < 0 || startY >= state.height) return;
+      const imgData = ctx.getImageData(0, 0, state.width, state.height);
+      const data = imgData.data;
+      const w = state.width, h = state.height;
+      const startPos = (startY * w + startX) * 4;
+      const targetR = data[startPos], targetG = data[startPos + 1], targetB = data[startPos + 2], targetA = data[startPos + 3];
+      const [fillR, fillG, fillB, fillA] = hexToRgba(fillHex);
+
+      if (targetR === fillR && targetG === fillG && targetB === fillB && targetA === fillA) return;
+
+      const visited = new Uint8Array(w * h);
+      const stack = [[startX, startY]];
+      const tolSq = tolerance * tolerance * 3;
+
+      while (stack.length > 0) {
+        const [cx, cy] = stack.pop();
+        const idx = cy * w + cx;
+        if (visited[idx]) continue;
+        const pos = idx * 4;
+        const dr = data[pos] - targetR;
+        const dg = data[pos + 1] - targetG;
+        const db = data[pos + 2] - targetB;
+        const da = data[pos + 3] - targetA;
+
+        if (dr * dr + dg * dg + db * db + da * da <= tolSq) {
+          visited[idx] = 1;
+          data[pos] = fillR;
+          data[pos + 1] = fillG;
+          data[pos + 2] = fillB;
+          data[pos + 3] = fillA;
+
+          if (cx > 0) stack.push([cx - 1, cy]);
+          if (cx < w - 1) stack.push([cx + 1, cy]);
+          if (cy > 0) stack.push([cx, cy - 1]);
+          if (cy < h - 1) stack.push([cx, cy + 1]);
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+    }
+
+    function magicWandSelect(startX, startY) {
+      const activeLayer = getActiveLayer();
+      const imgData = activeLayer.ctx.getImageData(0, 0, state.width, state.height);
+      const data = imgData.data;
+      const w = state.width, h = state.height;
+      const startPos = (startY * w + startX) * 4;
+      const targetR = data[startPos], targetG = data[startPos + 1], targetB = data[startPos + 2], targetA = data[startPos + 3];
+
+      const visited = new Uint8Array(w * h);
+      const stack = [[startX, startY]];
+      const tolSq = state.tolerance * state.tolerance * 3;
+      let minX = startX, maxX = startX, minY = startY, maxY = startY;
+
+      while (stack.length > 0) {
+        const [cx, cy] = stack.pop();
+        const idx = cy * w + cx;
+        if (visited[idx]) continue;
+        const pos = idx * 4;
+        const dr = data[pos] - targetR, dg = data[pos + 1] - targetG, db = data[pos + 2] - targetB, da = data[pos + 3] - targetA;
+        if (dr * dr + dg * dg + db * db + da * da <= tolSq) {
+          visited[idx] = 1;
+          if (cx < minX) minX = cx;
+          if (cx > maxX) maxX = cx;
+          if (cy < minY) minY = cy;
+          if (cy > maxY) maxY = cy;
+          if (cx > 0) stack.push([cx - 1, cy]);
+          if (cx < w - 1) stack.push([cx + 1, cy]);
+          if (cy > 0) stack.push([cx, cy - 1]);
+          if (cy < h - 1) stack.push([cx, cy + 1]);
+        }
+      }
+
+      const sw = maxX - minX + 1;
+      const sh = maxY - minY + 1;
+      if (sw < 2 || sh < 2) return;
+
+      const selImg = activeLayer.ctx.createImageData(sw, sh);
+      for (let y = 0; y < sh; y++) {
+        for (let x = 0; x < sw; x++) {
+          const gIdx = (minY + y) * w + (minX + x);
+          if (visited[gIdx]) {
+            const sPos = (y * sw + x) * 4;
+            const gPos = gIdx * 4;
+            selImg.data[sPos] = data[gPos];
+            selImg.data[sPos + 1] = data[gPos + 1];
+            selImg.data[sPos + 2] = data[gPos + 2];
+            selImg.data[sPos + 3] = data[gPos + 3];
+            // 從原圖層挖空
+            data[gPos + 3] = 0;
+          }
+        }
+      }
+      activeLayer.ctx.putImageData(imgData, 0, 0);
+      state.selection = { x: minX, y: minY, w: sw, h: sh, imageData: selImg, isDragging: false };
+      renderAllLayers();
+      drawOverlayGuides();
+      updateSelectionUI();
+      showToast('魔術棒已選取相近色彩區域，可拖曳移動！');
+    }
+
+    /**
+     * ============================================================================
+     * 選取區變形、裁切與文字工具
+     * ============================================================================
+     */
+    function updateSelectionUI() {
+      const bar = document.getElementById('selectionActions');
+      if (state.selection && state.selection.imageData) {
+        bar.classList.remove('hidden');
+        bar.classList.add('flex');
+      } else {
+        bar.classList.add('hidden');
+        bar.classList.remove('flex');
+      }
+    }
+
+    function commitSelection() {
+      if (!state.selection || !state.selection.imageData) return;
+      const activeLayer = getActiveLayer();
+      const s = state.selection;
+      const tempC = document.createElement('canvas');
+      tempC.width = s.imageData.width;
+      tempC.height = s.imageData.height;
+      tempC.getContext('2d').putImageData(s.imageData, 0, 0);
+      activeLayer.ctx.drawImage(tempC, s.x, s.y, s.w, s.h);
+      state.selection = null;
+      updateSelectionUI();
+      drawOverlayGuides();
+      renderAllLayers();
+      saveHistory('移動/變形選取區');
+    }
+
+    function clearSelection() {
+      if (state.selection) commitSelection();
+    }
+
+    function transformSelection(type) {
+      if (!state.selection || !state.selection.imageData) return;
+      const s = state.selection;
+      const src = document.createElement('canvas');
+      src.width = s.imageData.width;
+      src.height = s.imageData.height;
+      src.getContext('2d').putImageData(s.imageData, 0, 0);
+
+      const dst = document.createElement('canvas');
+      const dCtx = dst.getContext('2d');
+      if (type === 'rotate90') {
+        dst.width = src.height;
+        dst.height = src.width;
+        dCtx.translate(dst.width / 2, dst.height / 2);
+        dCtx.rotate(Math.PI / 2);
+        dCtx.drawImage(src, -src.width / 2, -src.height / 2);
+        const oldW = s.w;
+        s.w = s.h;
+        s.h = oldW;
+      } else {
+        dst.width = src.width;
+        dst.height = src.height;
+        dCtx.translate(type === 'flipH' ? dst.width : 0, type === 'flipV' ? dst.height : 0);
+        dCtx.scale(type === 'flipH' ? -1 : 1, type === 'flipV' ? -1 : 1);
+        dCtx.drawImage(src, 0, 0);
+      }
+      s.imageData = dCtx.getImageData(0, 0, dst.width, dst.height);
+      drawOverlayGuides();
+    }
+
+    function cropToSelection() {
+      if (!state.selection || !state.selection.imageData) return;
+      const s = state.selection;
+      commitSelection();
+      const nw = Math.max(16, Math.round(s.w));
+      const nh = Math.max(16, Math.round(s.h));
+
+      state.layers.forEach(l => {
+        const temp = document.createElement('canvas');
+        temp.width = nw;
+        temp.height = nh;
+        temp.getContext('2d').drawImage(l.canvas, s.x, s.y, nw, nh, 0, 0, nw, nh);
+        l.canvas.width = nw;
+        l.canvas.height = nh;
+        l.ctx.drawImage(temp, 0, 0);
+      });
+
+      state.width = nw;
+      state.height = nh;
+      mainCanvas.width = overlayCanvas.width = sandCanvas.width = nw;
+      mainCanvas.height = overlayCanvas.height = sandCanvas.height = nh;
+      canvasContainer.style.width = nw + 'px';
+      canvasContainer.style.height = nh + 'px';
+      document.getElementById('canvasDimText').textContent = `${nw} × ${nh}`;
+
+      renderAllLayers();
+      renderLayerList();
+      saveHistory('裁切畫布');
+      showToast(`已裁切畫布至 ${nw} × ${nh}`);
+    }
+
+    function openTextOverlay(x, y) {
+      state.textPos = { x, y };
+      const box = document.getElementById('textInputOverlay');
+      const ta = document.getElementById('canvasTextArea');
+      box.style.left = x + 'px';
+      box.style.top = y + 'px';
+      ta.style.fontFamily = state.fontFamily;
+      ta.style.fontSize = state.fontSize + 'px';
+      ta.style.fontWeight = state.fontBold ? 'bold' : 'normal';
+      ta.style.fontStyle = state.fontItalic ? 'italic' : 'normal';
+      ta.style.color = state.primaryColor;
+      ta.value = '';
+      box.classList.remove('hidden');
+      setTimeout(() => ta.focus(), 10);
+    }
+
+    function commitText() {
+      const ta = document.getElementById('canvasTextArea');
+      const text = ta.value;
+      document.getElementById('textInputOverlay').classList.add('hidden');
+      if (!text.trim() || !state.textPos) return;
+
+      const activeLayer = getActiveLayer();
+      activeLayer.ctx.save();
+      activeLayer.ctx.globalAlpha = state.brushOpacity;
+      activeLayer.ctx.fillStyle = state.primaryColor;
+      activeLayer.ctx.font = `${state.fontItalic ? 'italic ' : ''}${state.fontBold ? 'bold ' : ''}${state.fontSize}px "${state.fontFamily}", sans-serif`;
+      activeLayer.ctx.textBaseline = 'top';
+      const lines = text.split('\n');
+      lines.forEach((line, idx) => {
+        activeLayer.ctx.fillText(line, state.textPos.x, state.textPos.y + idx * (state.fontSize * 1.25));
+      });
+      activeLayer.ctx.restore();
+      renderAllLayers();
+      saveHistory('輸入文字');
+    }
+
+    function cancelText() {
+      document.getElementById('textInputOverlay').classList.add('hidden');
+    }
+
+    /**
+     * ============================================================================
+     * 濾鏡與特效引擎 (Filters & FX)
+     * ============================================================================
+     */
+    function applyFilter(type) {
+      const activeLayer = getActiveLayer();
+      if (!activeLayer || activeLayer.locked) return;
+      const w = state.width, h = state.height;
+      const imgData = activeLayer.ctx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+
+      if (type === 'invert') {
+        for (let i = 0; i < d.length; i += 4) {
+          d[i] = 255 - d[i];
+          d[i + 1] = 255 - d[i + 1];
+          d[i + 2] = 255 - d[i + 2];
+        }
+        activeLayer.ctx.putImageData(imgData, 0, 0);
+      } else if (type === 'grayscale') {
+        for (let i = 0; i < d.length; i += 4) {
+          const avg = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+          d[i] = d[i + 1] = d[i + 2] = avg;
+        }
+        activeLayer.ctx.putImageData(imgData, 0, 0);
+      } else if (type === 'sepia') {
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i], g = d[i + 1], b = d[i + 2];
+          d[i] = Math.min(255, r * 0.393 + g * 0.769 + b * 0.189);
+          d[i + 1] = Math.min(255, r * 0.349 + g * 0.686 + b * 0.168);
+          d[i + 2] = Math.min(255, r * 0.272 + g * 0.534 + b * 0.131);
+        }
+        activeLayer.ctx.putImageData(imgData, 0, 0);
+      } else if (type === 'threshold') {
+        for (let i = 0; i < d.length; i += 4) {
+          const v = (d[i] + d[i + 1] + d[i + 2]) / 3 > 128 ? 255 : 0;
+          d[i] = d[i + 1] = d[i + 2] = v;
+        }
+        activeLayer.ctx.putImageData(imgData, 0, 0);
+      } else if (type === 'pixelate') {
+        const blockSize = 12;
+        for (let y = 0; y < h; y += blockSize) {
+          for (let x = 0; x < w; x += blockSize) {
+            const p = (y * w + x) * 4;
+            activeLayer.ctx.fillStyle = `rgba(${d[p]},${d[p+1]},${d[p+2]},${d[p+3]/255})`;
+            activeLayer.ctx.clearRect(x, y, blockSize, blockSize);
+            activeLayer.ctx.fillRect(x, y, blockSize, blockSize);
+          }
+        }
+      } else if (type === 'glitch') {
+        const copy = new Uint8ClampedArray(d);
+        const shift = 14;
+        for (let y = 0; y < h; y++) {
+          const rowOffset = (Math.sin(y * 0.08) > 0.85) ? (Math.random() - 0.5) * 30 : 0;
+          for (let x = 0; x < w; x++) {
+            const idx = (y * w + x) * 4;
+            const rx = Math.min(w - 1, Math.max(0, Math.round(x + shift + rowOffset)));
+            const bx = Math.min(w - 1, Math.max(0, Math.round(x - shift + rowOffset)));
+            d[idx] = copy[(y * w + rx) * 4];
+            d[idx + 2] = copy[(y * w + bx) * 4 + 2];
+          }
+        }
+        activeLayer.ctx.putImageData(imgData, 0, 0);
+      } else if (type === 'crt') {
+        for (let y = 0; y < h; y += 4) {
+          for (let x = 0; x < w; x++) {
+            const idx = (y * w + x) * 4;
+            d[idx] *= 0.45;
+            d[idx + 1] *= 0.45;
+            d[idx + 2] *= 0.45;
+          }
+        }
+        activeLayer.ctx.putImageData(imgData, 0, 0);
+      } else if (type === 'blur') {
+        const temp = document.createElement('canvas');
+        temp.width = w; temp.height = h;
+        const tCtx = temp.getContext('2d');
+        tCtx.filter = 'blur(4px)';
+        tCtx.drawImage(activeLayer.canvas, 0, 0);
+        activeLayer.ctx.clearRect(0, 0, w, h);
+        activeLayer.ctx.drawImage(temp, 0, 0);
+      }
+
+      renderAllLayers();
+      saveHistory(`套用濾鏡: ${type}`);
+      showToast('已套用濾鏡特效！');
+    }
+
+    function applyBrightnessContrast() {
+      const activeLayer = getActiveLayer();
+      if (!activeLayer || activeLayer.locked) return;
+      const bright = parseInt(document.getElementById('fxBright').value, 10) * 2.55;
+      const contrast = parseInt(document.getElementById('fxContrast').value, 10);
+      const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+
+      const imgData = activeLayer.ctx.getImageData(0, 0, state.width, state.height);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        d[i] = Math.min(255, Math.max(0, factor * (d[i] - 128) + 128 + bright));
+        d[i + 1] = Math.min(255, Math.max(0, factor * (d[i + 1] - 128) + 128 + bright));
+        d[i + 2] = Math.min(255, Math.max(0, factor * (d[i + 2] - 128) + 128 + bright));
+      }
+      activeLayer.ctx.putImageData(imgData, 0, 0);
+      renderAllLayers();
+      saveHistory('調整亮度與對比');
+      showToast('已套用光影調整');
+    }
+
+    /**
+     * ============================================================================
+     * 物理重力流沙模式 (Falling Sand Toy Mode)
+     * ============================================================================
+     */
+    let sandGrid = null;
+    const SAND_SCALE = 4; // 每顆沙粒佔 4x4 像素以確保 60FPS 流暢度
+
+    function toggleSandboxMode() {
+      state.sandboxMode = !state.sandboxMode;
+      const btn = document.getElementById('btnSandbox');
+      if (state.sandboxMode) {
+        const sw = Math.floor(state.width / SAND_SCALE);
+        const sh = Math.floor(state.height / SAND_SCALE);
+        sandGrid = new Array(sw * sh).fill(null);
+        sandCanvas.classList.remove('hidden');
+        btn.classList.add('bg-amber-600', 'text-white', 'border-amber-400');
+        showToast('重力流沙模式開啟！在畫布上揮灑彩沙吧（關閉時將自動融入圖層）');
+      } else {
+        // 將流沙畫面轉印回目前圖層
+        const activeLayer = getActiveLayer();
+        if (activeLayer && !activeLayer.locked) {
+          activeLayer.ctx.drawImage(sandCanvas, 0, 0);
+          renderAllLayers();
+          saveHistory('融入物理流沙畫作');
+        }
+        sandCanvas.classList.add('hidden');
+        sandCtx.clearRect(0, 0, state.width, state.height);
+        sandGrid = null;
+        btn.classList.remove('bg-amber-600', 'text-white', 'border-amber-400');
+        showToast('已將流沙作品固化至目前圖層！');
+      }
+    }
+
+    function spawnSandParticles(cx, cy) {
+      if (!sandGrid) return;
+      const sw = Math.floor(state.width / SAND_SCALE);
+      const sh = Math.floor(state.height / SAND_SCALE);
+      const gx = Math.floor(cx / SAND_SCALE);
+      const gy = Math.floor(cy / SAND_SCALE);
+      const radius = Math.max(1, Math.floor(state.brushSize / (SAND_SCALE * 1.5)));
+
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          if (Math.random() > 0.45) {
+            const nx = gx + dx;
+            const ny = gy + dy;
+            if (nx >= 0 && nx < sw && ny >= 0 && ny < sh && !sandGrid[ny * sw + nx]) {
+              sandGrid[ny * sw + nx] = state.primaryColor;
+            }
+          }
+        }
+      }
+    }
+
+    function sandboxLoop() {
+      if (state.sandboxMode && sandGrid) {
+        const sw = Math.floor(state.width / SAND_SCALE);
+        const sh = Math.floor(state.height / SAND_SCALE);
+        // 由下往上更新沙粒物理掉落
+        for (let y = sh - 2; y >= 0; y--) {
+          for (let x = 0; x < sw; x++) {
+            const idx = y * sw + x;
+            const color = sandGrid[idx];
+            if (!color) continue;
+
+            const below = (y + 1) * sw + x;
+            const dir = Math.random() < 0.5 ? -1 : 1;
+            const diagA = (y + 1) * sw + (x + dir);
+            const diagB = (y + 1) * sw + (x - dir);
+
+            if (!sandGrid[below]) {
+              sandGrid[below] = color;
+              sandGrid[idx] = null;
+            } else if (x + dir >= 0 && x + dir < sw && !sandGrid[diagA]) {
+              sandGrid[diagA] = color;
+              sandGrid[idx] = null;
+            } else if (x - dir >= 0 && x - dir < sw && !sandGrid[diagB]) {
+              sandGrid[diagB] = color;
+              sandGrid[idx] = null;
+            }
+          }
+        }
+
+        sandCtx.clearRect(0, 0, state.width, state.height);
+        for (let y = 0; y < sh; y++) {
+          for (let x = 0; x < sw; x++) {
+            const c = sandGrid[y * sw + x];
+            if (c) {
+              sandCtx.fillStyle = c;
+              sandCtx.fillRect(x * SAND_SCALE, y * SAND_SCALE, SAND_SCALE, SAND_SCALE);
+            }
+          }
+        }
+      }
+      requestAnimationFrame(sandboxLoop);
+    }
+
+    /**
+     * ============================================================================
+     * 縮時回放與逐格動畫工作室
+     * ============================================================================
+     */
+    function openTimelapseModal() {
+      document.getElementById('timelapseModal').classList.remove('hidden');
+      playTimelapse();
+    }
+
+    function playTimelapse() {
+      stopTimelapse();
+      const canvas = document.getElementById('timelapseCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = state.width;
+      canvas.height = state.height;
+      const speed = parseInt(document.getElementById('timelapseSpeed').value, 10);
+      let step = 0;
+
+      state.timelapseTimer = setInterval(() => {
+        if (step >= state.history.length) {
+          stopTimelapse();
+          document.getElementById('timelapseStatus').textContent = '回放完成！';
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+        };
+        img.src = state.history[step].compositeDataUrl;
+        document.getElementById('timelapseStatus').textContent = `步驟 ${step + 1} / ${state.history.length} (${state.history[step].name})`;
+        step++;
+      }, speed);
+    }
+
+    function stopTimelapse() {
+      if (state.timelapseTimer) {
+        clearInterval(state.timelapseTimer);
+        state.timelapseTimer = null;
+      }
+    }
+
+    function openAnimationModal() {
+      document.getElementById('animationModal').classList.remove('hidden');
+      const canvas = document.getElementById('animCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = state.width;
+      canvas.height = state.height;
+      let frameIdx = 0;
+
+      const tick = () => {
+        const fps = parseInt(document.getElementById('animFps').value, 10);
+        if (state.layers.length > 0) {
+          const layer = state.layers[frameIdx % state.layers.length];
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(layer.canvas, 0, 0);
+          document.getElementById('animFrameIndicator').textContent = `Frame ${(frameIdx % state.layers.length) + 1} / ${state.layers.length} (${layer.name})`;
+          frameIdx++;
+        }
+        state.animTimer = setTimeout(tick, 1000 / fps);
+      };
+      tick();
+    }
+
+    function stopAnimationLoop() {
+      if (state.animTimer) {
+        clearTimeout(state.animTimer);
+        state.animTimer = null;
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 工具切換、色彩系統與 UI 互動控制
+     * ============================================================================
+     */
+    function selectTool(toolName) {
+      if (state.selection && toolName !== 'select') commitSelection();
+      state.tool = toolName;
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        const isMatch = btn.dataset.tool === toolName;
+        btn.classList.toggle('active-tool', isMatch);
+        btn.classList.toggle('bg-indigo-600', isMatch);
+        btn.classList.toggle('text-white', isMatch);
+        if (!isMatch) btn.classList.add('bg-slate-800');
+      });
+      updateDynamicToolOptions();
+    }
+
+    function updateDynamicToolOptions() {
+      const container = document.getElementById('dynamicToolOptions');
+      const t = state.tool;
+
+      if (['rect','roundrect','circle','star','bubble','heart'].includes(t)) {
+        container.innerHTML = `
+          <span class="opacity-75">填充模式:</span>
+          <select onchange="state.shapeFillMode=this.value" class="bg-slate-800 border border-slate-700 rounded px-2 py-0.5">
+            <option value="stroke" ${state.shapeFillMode==='stroke'?'selected':''}>僅外框</option>
+            <option value="fill" ${state.shapeFillMode==='fill'?'selected':''}>僅填滿 (前景色)</option>
+            <option value="both" ${state.shapeFillMode==='both'?'selected':''}>外框 + 背景色填滿</option>
+          </select>
+          <span class="opacity-50 hidden md:inline">按住 Shift 鎖定正比例</span>
+        `;
+      } else if (t === 'gradient') {
+        container.innerHTML = `
+          <span class="opacity-75">漸層樣式:</span>
+          <select onchange="state.gradientType=this.value" class="bg-slate-800 border border-slate-700 rounded px-2 py-0.5">
+            <option value="linear" ${state.gradientType==='linear'?'selected':''}>線性漸層 (前景→背景)</option>
+            <option value="radial" ${state.gradientType==='radial'?'selected':''}>放射狀漸層</option>
+          </select>
+        `;
+      } else if (t === 'bucket' || t === 'wand') {
+        container.innerHTML = `
+          <span class="opacity-75">色彩容許度:</span>
+          <input type="range" min="0" max="150" value="${state.tolerance}" oninput="state.tolerance=parseInt(this.value); this.nextElementSibling.textContent=this.value" class="w-24">
+          <span class="font-mono text-indigo-400 font-bold">${state.tolerance}</span>
+        `;
+      } else if (t === 'emoji') {
+        const emojis = ['✨','🔥','💖','🚀','🐱','🌸','⭐','🎉','🌈','👑','🍕','👾'];
+        container.innerHTML = `<span class="opacity-75">選擇貼圖:</span>` + emojis.map(em =>
+          `<button onclick="state.selectedEmoji='${em}'; updateDynamicToolOptions()" class="px-1.5 py-0.5 rounded text-sm ${state.selectedEmoji===em?'bg-indigo-600':'bg-slate-800 hover:bg-slate-700'}">${em}</button>`
+        ).join('');
+      } else if (t === 'text') {
+        container.innerHTML = `
+          <select onchange="state.fontFamily=this.value" class="bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5">
+            <option value="Noto Sans TC">思源黑體</option>
+            <option value="serif">明體 / 襯線體</option>
+            <option value="monospace">等寬程式碼體</option>
+            <option value="Press Start 2P">8-Bit 像素字體</option>
+          </select>
+          <input type="number" value="${state.fontSize}" min="10" max="200" onchange="state.fontSize=parseInt(this.value)" class="w-14 bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5" title="字體大小">
+          <button onclick="state.fontBold=!state.fontBold; updateDynamicToolOptions()" class="px-2 py-0.5 rounded font-bold ${state.fontBold?'bg-indigo-600 text-white':'bg-slate-800'}">B</button>
+          <button onclick="state.fontItalic=!state.fontItalic; updateDynamicToolOptions()" class="px-2 py-0.5 rounded italic ${state.fontItalic?'bg-indigo-600 text-white':'bg-slate-800'}">I</button>
+        `;
+      } else {
+        container.innerHTML = `<span class="opacity-60">提示：支援多圖層混合與萬花筒對稱繪圖</span>`;
+      }
+    }
+
+    function updateBrushSize(val) {
+      state.brushSize = parseInt(val, 10);
+      document.getElementById('brushSizeVal').textContent = val + 'px';
+    }
+
+    function updateBrushOpacity(val) {
+      state.brushOpacity = parseInt(val, 10) / 100;
+      document.getElementById('brushOpacityVal').textContent = val + '%';
+    }
+
+    function setPrimaryColor(hex) {
+      if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) return;
+      state.primaryColor = hex;
+      document.getElementById('primaryColorBox').style.backgroundColor = hex;
+      document.getElementById('nativeColorPicker').value = hex;
+      document.getElementById('hexColorInput').value = hex.toUpperCase();
+    }
+
+    function setSecondaryColor(hex) {
+      state.secondaryColor = hex;
+      document.getElementById('secondaryColorBox').style.backgroundColor = hex;
+    }
+
+    function swapColors() {
+      const temp = state.primaryColor;
+      setPrimaryColor(state.secondaryColor);
+      setSecondaryColor(temp);
+    }
+
+    function randomVibrantColor() {
+      const h = Math.floor(Math.random() * 360);
+      document.getElementById('hslH').value = h;
+      document.getElementById('hslS').value = 85;
+      document.getElementById('hslL').value = 58;
+      updateFromHSL();
+    }
+
+    function updateFromHSL() {
+      const h = parseInt(document.getElementById('hslH').value, 10);
+      const s = parseInt(document.getElementById('hslS').value, 10);
+      const l = parseInt(document.getElementById('hslL').value, 10);
+      document.getElementById('hslHVal').textContent = h + '°';
+      document.getElementById('hslSVal').textContent = s + '%';
+      document.getElementById('hslLVal').textContent = l + '%';
+
+      // HSL 轉 HEX
+      const sNorm = s / 100, lNorm = l / 100;
+      const c = (1 - Math.abs(2 * lNorm - 1)) * sNorm;
+      const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+      const m = lNorm - c / 2;
+      let r = 0, g = 0, b = 0;
+      if (h < 60) [r, g, b] = [c, x, 0];
+      else if (h < 120) [r, g, b] = [x, c, 0];
+      else if (h < 180) [r, g, b] = [0, c, x];
+      else if (h < 240) [r, g, b] = [0, x, c];
+      else if (h < 300) [r, g, b] = [x, 0, c];
+      else [r, g, b] = [c, 0, x];
+
+      const toHex = v => Math.round((v + m) * 255).toString(16).padStart(2, '0');
+      setPrimaryColor(`#${toHex(r)}${toHex(g)}${toHex(b)}`);
+    }
+
+    function renderSwatches(presetKey) {
+      const grid = document.getElementById('swatchGrid');
+      grid.innerHTML = '';
+      const colors = PALETTES[presetKey] || PALETTES.classic;
+      colors.forEach(hex => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full aspect-square rounded-md border border-slate-600/80 hover:scale-110 transition shadow-sm';
+        btn.style.backgroundColor = hex;
+        btn.title = `${hex} (左鍵前景色 / 右鍵背景色)`;
+        btn.onclick = () => setPrimaryColor(hex);
+        btn.oncontextmenu = (e) => { e.preventDefault(); setSecondaryColor(hex); showToast('已設定背景色：' + hex); };
+        grid.appendChild(btn);
+      });
+    }
+
+    function pickColorAt(x, y) {
+      if (x < 0 || x >= state.width || y < 0 || y >= state.height) return;
+      const pixel = mainCtx.getImageData(x, y, 1, 1).data;
+      if (pixel[3] === 0) {
+        showToast('吸取到透明區域');
+        return;
+      }
+      const hex = '#' + [pixel[0], pixel[1], pixel[2]].map(v => v.toString(16).padStart(2, '0')).join('');
+      setPrimaryColor(hex);
+      showToast('已吸取顏色：' + hex.toUpperCase());
+    }
+
+    /**
+     * ============================================================================
+     * 檔案匯入/匯出、縮放、主題與快捷鍵
+     * ============================================================================
+     */
+    function clearActiveLayer() {
+      const active = getActiveLayer();
+      if (!active || active.locked) return;
+      active.ctx.clearRect(0, 0, state.width, state.height);
+      renderAllLayers();
+      saveHistory('清空圖層');
+    }
+
+    function toggleExportMenu() {
+      document.getElementById('exportMenu').classList.toggle('hidden');
+    }
+
+    function exportImage(format) {
+      document.getElementById('exportMenu').classList.add('hidden');
+      if (state.selection) commitSelection();
+
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = state.width;
+      outCanvas.height = state.height;
+      const outCtx = outCanvas.getContext('2d');
+      if (format === 'jpeg') {
+        outCtx.fillStyle = '#ffffff';
+        outCtx.fillRect(0, 0, state.width, state.height);
+      }
+      outCtx.drawImage(mainCanvas, 0, 0);
+
+      const link = document.createElement('a');
+      link.download = `終極小畫家作品_${Date.now()}.${format}`;
+      link.href = outCanvas.toDataURL(`image/${format}`, 0.92);
+      link.click();
+      showToast(`已匯出 ${format.toUpperCase()} 圖檔！`);
+    }
+
+    function exportSpriteSheet() {
+      document.getElementById('exportMenu').classList.add('hidden');
+      const count = state.layers.length;
+      const sheet = document.createElement('canvas');
+      sheet.width = state.width * count;
+      sheet.height = state.height;
+      const sCtx = sheet.getContext('2d');
+      state.layers.forEach((l, i) => sCtx.drawImage(l.canvas, i * state.width, 0));
+
+      const link = document.createElement('a');
+      link.download = `動畫精靈圖_${count}格_${Date.now()}.png`;
+      link.href = sheet.toDataURL('image/png');
+      link.click();
+      showToast(`已匯出 ${count} 格動畫精靈圖！`);
+    }
+
+    function exportProjectJSON() {
+      document.getElementById('exportMenu').classList.add('hidden');
+      const project = {
+        app: 'UltimatePaintPro',
+        width: state.width,
+        height: state.height,
+        layers: state.layers.map(l => ({
+          name: l.name,
+          visible: l.visible,
+          locked: l.locked,
+          opacity: l.opacity,
+          blendMode: l.blendMode,
+          dataUrl: l.canvas.toDataURL('image/png')
+        }))
+      };
+      const blob = new Blob([JSON.stringify(project)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.download = `小畫家專案_${Date.now()}.json`;
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      showToast('已儲存完整多圖層專案檔 (.json)！');
+    }
+
+    function handleImport(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (file.name.endsWith('.json')) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const proj = JSON.parse(ev.target.result);
+            createInitialCanvas(proj.width, proj.height, 'transparent');
+            state.layers = [];
+            let loaded = 0;
+            proj.layers.forEach(ld => {
+              const l = createLayerObject(ld.name);
+              l.visible = ld.visible;
+              l.locked = ld.locked;
+              l.opacity = ld.opacity;
+              l.blendMode = ld.blendMode;
+              const img = new Image();
+              img.onload = () => {
+                l.ctx.drawImage(img, 0, 0);
+                loaded++;
+                if (loaded === proj.layers.length) {
+                  state.activeLayerId = state.layers[state.layers.length - 1].id;
+                  renderAllLayers();
+                  renderLayerList();
+                  saveHistory('載入專案檔');
+                  showToast('成功載入多圖層專案！');
+                }
+              };
+              img.src = ld.dataUrl;
+              state.layers.push(l);
+            });
+          } catch (err) {
+            showToast('專案檔格式錯誤！');
+          }
+        };
+        reader.readAsText(file);
+      } else {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            const newL = createLayerObject(file.name.slice(0, 14));
+            newL.ctx.drawImage(img, 0, 0);
+            state.layers.push(newL);
+            state.activeLayerId = newL.id;
+            renderAllLayers();
+            renderLayerList();
+            saveHistory('匯入圖片圖層');
+            showToast('圖片已匯入為新圖層！');
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+      e.target.value = '';
+    }
+
+    // 畫布縮放控制
+    function adjustZoom(delta) {
+      state.zoom = Math.min(4, Math.max(0.2, +(state.zoom + delta).toFixed(2)));
+      applyZoom();
+    }
+
+    function resetZoom() {
+      state.zoom = 1;
+      applyZoom();
+    }
+
+    function fitCanvasToScreen() {
+      const vp = document.getElementById('canvasViewport');
+      const scaleX = (vp.clientWidth - 48) / state.width;
+      const scaleY = (vp.clientHeight - 64) / state.height;
+      state.zoom = Math.min(1, Math.max(0.25, +Math.min(scaleX, scaleY).toFixed(2)));
+      applyZoom();
+    }
+
+    function applyZoom() {
+      canvasContainer.style.transform = `scale(${state.zoom})`;
+      document.getElementById('zoomLevelText').textContent = Math.round(state.zoom * 100) + '%';
+    }
+
+    // 視窗與主題切換
+    function openNewCanvasModal() { document.getElementById('newCanvasModal').classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function setNewPreset(w, h) {
+      document.getElementById('newWidth').value = w;
+      document.getElementById('newHeight').value = h;
+    }
+    function confirmNewCanvas() {
+      const w = Math.min(4096, Math.max(16, parseInt(document.getElementById('newWidth').value, 10) || 800));
+      const h = Math.min(4096, Math.max(16, parseInt(document.getElementById('newHeight').value, 10) || 600));
+      const bg = document.getElementById('newBgType').value;
+      createInitialCanvas(w, h, bg);
+      closeModal('newCanvasModal');
+    }
+
+    function toggleGrid() {
+      state.showGrid = !state.showGrid;
+      document.getElementById('gridOverlay').classList.toggle('hidden', !state.showGrid);
+      document.getElementById('btnGrid').classList.toggle('bg-indigo-600', state.showGrid);
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.remove('win95-theme');
+      const isDark = document.documentElement.classList.toggle('dark');
+      document.body.classList.toggle('bg-slate-950', isDark);
+      document.body.classList.toggle('bg-slate-100', !isDark);
+      document.body.classList.toggle('text-slate-100', isDark);
+      document.body.classList.toggle('text-slate-900', !isDark);
+      document.getElementById('themeIcon').className = isDark ? 'fa-solid fa-sun text-amber-300' : 'fa-solid fa-moon text-indigo-600';
+      document.querySelectorAll('.ui-panel').forEach(el => {
+        el.classList.toggle('bg-slate-900', isDark);
+        el.classList.toggle('bg-white', !isDark);
+        el.classList.toggle('border-slate-800', isDark);
+        el.classList.toggle('border-slate-200', !isDark);
+      });
+    }
+
+    function toggleWin95Theme() {
+      const active = document.body.classList.toggle('win95-theme');
+      if (active) {
+        showToast('歡迎回到 1995 年！經典小畫家皮膚已啟動');
+      } else {
+        showToast('已切回現代專業深色工作區');
+      }
+    }
+
+    function switchRightTab(tab) {
+      document.querySelectorAll('.right-panel').forEach(p => p.classList.add('hidden'));
+      document.getElementById('panel-' + tab).classList.remove('hidden');
+      document.querySelectorAll('.right-tab').forEach(t => {
+        const match = t.id === 'tab-' + tab;
+        t.classList.toggle('text-indigo-400', match);
+        t.classList.toggle('border-b-2', match);
+        t.classList.toggle('border-indigo-500', match);
+        t.classList.toggle('opacity-60', !match);
+      });
+    }
+
+    function toggleRightSidebar() {
+      document.getElementById('rightSidebar').classList.toggle('translate-x-full');
+    }
+
+    /**
+     * 事件綁定與鍵盤快捷鍵
+     */
+    function bindEvents() {
+      overlayCanvas.addEventListener('mousedown', handlePointerDown);
+      window.addEventListener('mousemove', handlePointerMove);
+      window.addEventListener('mouseup', handlePointerUp);
+
+      // 觸控支援
+      overlayCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); handlePointerDown(e); }, { passive: false });
+      overlayCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); handlePointerMove(e); }, { passive: false });
+      overlayCanvas.addEventListener('touchend', handlePointerUp);
+
+      // 右鍵快速吸色
+      overlayCanvas.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const { x, y } = getCanvasCoords(e);
+        pickColorAt(Math.floor(x), Math.floor(y));
+      });
+
+      // 滾輪縮放 (按住 Ctrl 或直接滾動)
+      document.getElementById('canvasViewport').addEventListener('wheel', (e) => {
+        e.preventDefault();
+        adjustZoom(e.deltaY < 0 ? 0.1 : -0.1);
+      }, { passive: false });
+
+      // 點擊外部關閉匯出選單
+      window.addEventListener('click', (e) => {
+        if (!e.target.closest('#exportMenu') && !e.target.closest('button[onclick="toggleExportMenu()"]')) {
+          document.getElementById('exportMenu').classList.add('hidden');
+        }
+      });
+
+      // 鍵盤快捷鍵
+      window.addEventListener('keydown', (e) => {
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+          e.preventDefault();
+          e.shiftKey ? redo() : undo();
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+          e.preventDefault();
+          redo();
+        } else if (e.key.toLowerCase() === 'p') selectTool('pencil');
+        else if (e.key.toLowerCase() === 'b') selectTool('brush');
+        else if (e.key.toLowerCase() === 'e') selectTool('eraser');
+        else if (e.key.toLowerCase() === 'g') selectTool('bucket');
+        else if (e.key.toLowerCase() === 'i') selectTool('eyedropper');
+        else if (e.key.toLowerCase() === 't') selectTool('text');
+        else if (e.key.toLowerCase() === 'm') selectTool('select');
+        else if (e.key.toLowerCase() === 'w') selectTool('wand');
+        else if (e.key.toLowerCase() === 'x') swapColors();
+        else if (e.key === '[') updateBrushSize(Math.max(1, state.brushSize - 2));
+        else if (e.key === ']') updateBrushSize(Math.min(120, state.brushSize + 2));
+        else if (e.key === 'Enter' && state.selection) commitSelection();
+        else if (e.key === 'Escape' && state.selection) clearSelection();
+      });
+    }
+
+    // 啟動應用程式
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
